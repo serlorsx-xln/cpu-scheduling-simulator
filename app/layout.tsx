@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import { Geist_Mono } from "next/font/google";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
@@ -16,11 +15,20 @@ const thai = localFont({
   fallback: ["ui-sans-serif", "system-ui", "sans-serif"],
 });
 
-/** ตัวเลขที่ต้องเรียงคอลัมน์ (ตาราง แกนเวลา) — LINE Seed ไม่มี tabular figures */
-const mono = Geist_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+/**
+ * Geist Mono (SIL OFL 1.1, จากแพ็กเกจ geist ของ Vercel) — ตัวเลขที่ต้องเรียงคอลัมน์ (ตาราง แกนเวลา)
+ * self-host แทน next/font/google: Turbopack build บน linux/amd64 resolve ฟอนต์ Google ไม่ได้
+ * และไม่ต้องพึ่งเน็ตตอน build
+ */
+const mono = localFont({
+  src: [
+    { path: "./fonts/GeistMono-Regular.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/GeistMono-Medium.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/GeistMono-SemiBold.woff2", weight: "600", style: "normal" },
+  ],
   variable: "--font-geist-mono",
+  display: "swap",
+  fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
 });
 
 const description =

@@ -11,9 +11,10 @@
 | `.dockerignore` | ไม่ส่ง `node_modules`, `.next`, `.git`, `.env*`, docs ฯลฯ เข้า build context |
 | `next.config.ts` | `output: "standalone"`, ปิด `X-Powered-By`, security headers (nosniff, referrer-policy, frame-options, permissions-policy) |
 | `app/api/health/route.ts` | `GET /api/health` → `{"status":"ok"}` (no-store) สำหรับ health check |
+| `app/fonts/GeistMono-*.woff2` | Geist Mono self-host (SIL OFL, จากแพ็กเกจ `geist`) — **เลิกใช้ `next/font/google`** เพราะ Turbopack build บน linux/amd64 ล้ม (`Can't resolve '@vercel/turbopack-next/internal/font/google/font'`) ทั้งที่บน Mac arm64 ผ่าน; ผลพลอยได้คือ build ไม่ต้องพึ่งเน็ต |
 | `package-lock.json` | สร้างใหม่ให้ครบทุกแพลตฟอร์ม — ของเดิมขาด `@emnapi/*` ทำให้ `npm ci` บน Linux ล้ม (runtime deps ไม่เปลี่ยนเวอร์ชัน; เปลี่ยนแค่ patch ของเครื่องมือ dev) |
 
-ตรวจในเครื่องด้วย Docker แล้ว: build ผ่าน (test 60/60 ภายใน build), image ~320 MB, `/api/health` ตอบ ok, Docker health = healthy, หน้าเว็บ + ฟอนต์ + headers ถูกต้อง, E2E ทุกฟีเจอร์ผ่านบน production build (ค่า SET-A ตรงคำนวณมือ)
+ตรวจด้วย Docker ทั้ง arm64 และ **linux/amd64 (แพลตฟอร์มเดียวกับเซิร์ฟเวอร์, `--no-cache`)** แล้ว: build ผ่าน (test 60/60 ภายใน build), image ~320 MB, `/api/health` ตอบ ok, Docker health = healthy, หน้าเว็บ + ฟอนต์ + headers ถูกต้อง, E2E ทุกฟีเจอร์ผ่านบน production build (ค่า SET-A ตรงคำนวณมือ)
 
 ```bash
 docker build -t cpu-scheduling-simulator .
