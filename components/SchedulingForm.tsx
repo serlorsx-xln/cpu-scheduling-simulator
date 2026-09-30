@@ -1,23 +1,23 @@
 "use client";
 
-import { Check, Dices, Minus, Plus, RotateCcw } from "lucide-react";
+import { Dices, Minus, Plus, RotateCcw } from "lucide-react";
+import type { ReactNode } from "react";
 
 import ProcessTableInput from "./ProcessTableInput";
-import { ALGORITHM_META } from "./algorithm-styles";
-import type { AlgorithmName } from "@/lib/scheduling/types";
+import { ALGORITHM_META, ALGORITHM_ORDER } from "./algorithm-styles";
 import type { RawFormInput } from "@/lib/validation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 export type BtMode = "random" | "manual";
 export type AlgorithmFlags = RawFormInput["algorithms"];
+
+const KEY_OF = { FCFS: "fcfs", SJF: "sjf", RR: "rr" } as const;
 
 interface SchedulingFormProps {
   processCount: number | ""
@@ -36,110 +36,171 @@ interface SchedulingFormProps {
   processCountError?: string
   burstTimeError: (processId: number) => string | undefined
   timeQuantumError?: string
+  algorithmError?: string
 }
 
-const ALGORITHM_ORDER: { key: keyof AlgorithmFlags; name: AlgorithmName }[] = [
-  { key: "fcfs", name: "FCFS" },
-  { key: "sjf", name: "SJF" },
-  { key: "rr", name: "RR" },
-];
-
-function StepHeading({ no, title }: { no: string; title: string }) {
+function Section({
+  title,
+  hint,
+  action,
+  children,
+}: {
+  title: string
+  hint?: ReactNode
+  action?: ReactNode
+  children: ReactNode
+}) {
   return (
-    <div className="mb-3 flex items-center gap-2.5">
-      <span className="flex size-5 items-center justify-center rounded-[5px] bg-secondary font-mono text-[11px] font-medium text-secondary-foreground">
-        {no}
-      </span>
-      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+    <section className="px-5 py-5">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="text-sm font-bold text-foreground">{title}</h2>
+        {action}
+      </div>
+      {children}
+      {hint}
+    </section>
+  );
+}
+
+/** ช่องตัวเลข + ปุ่ม −/+ (ขั้นต่ำ 1) ใช้กับจำนวนโปรเซสและ Time Quantum */
+function NumberStepper({
+  id,
+  value,
+  onChange,
+  min = 1,
+  max,
+  invalid,
+  describedBy,
+  label,
+}: {
+  id: string
+  value: string
+  onChange: (next: string) => void
+  min?: number
+  max?: number
+  invalid?: boolean
+  describedBy?: string
+  label: string
+}) {
+  const step = (delta: number) => {
+    const current = Number.parseInt(value, 10);
+    let next = Number.isNaN(current) ? min : current + delta;
+    next = Math.max(min, next);
+    if (max !== undefined) next = Math.min(max, next);
+    onChange(String(next));
+  };
+  const current = Number.parseInt(value, 10);
+
+  return (
+    <div
+      className={cn(
+        "inline-flex h-8 items-stretch overflow-hidden rounded-lg border border-input bg-input/30 transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50",
+        invalid && "border-destructive/60 ring-3 ring-destructive/25"
+      )}
+    >
+      <button
+        type="button"
+        onClick={() => step(-1)}
+        disabled={!Number.isNaN(current) && current <= min}
+        aria-label={`ลด${label}`}
+        className="grid w-8 place-items-center text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-foreground focus-visible:bg-accent disabled:pointer-events-none disabled:opacity-40"
+      >
+        <Minus className="size-3.5" aria-hidden />
+      </button>
+      <input
+        id={id}
+        type="number"
+        inputMode="numeric"
+        min={min}
+        max={max}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={label}
+        aria-invalid={invalid || undefined}
+        aria-describedby={describedBy}
+        className="w-11 border-x border-input bg-transparent text-center font-mono text-sm font-medium tabular text-foreground outline-none"
+      />
+      <button
+        type="button"
+        onClick={() => step(1)}
+        disabled={max !== undefined && !Number.isNaN(current) && current >= max}
+        aria-label={`เพิ่ม${label}`}
+        className="grid w-8 place-items-center text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-foreground focus-visible:bg-accent disabled:pointer-events-none disabled:opacity-40"
+      >
+        <Plus className="size-3.5" aria-hidden />
+      </button>
     </div>
   );
 }
 
-/** แผงตั้งค่าการจำลอง (คอลัมน์ซ้าย sticky บนจอใหญ่) */
+/** แผงตั้งค่าการจำลอง — คอลัมน์ซ้าย (sticky บนจอใหญ่) */
 export default function SchedulingForm(props: SchedulingFormProps) {
   const { algorithms } = props;
-
-  const adjustQuantum = (delta: number) => {
-    const current = Number.parseInt(props.timeQuantum, 10);
-    const next = Number.isNaN(current) ? 1 : Math.max(1, current + delta);
-    props.onTimeQuantumChange(String(next));
-  };
+  const countValue = props.processCount === "" ? "" : String(props.processCount);
 
   return (
     <form
+      className="lg:flex lg:max-h-full lg:min-h-0 lg:flex-col"
       noValidate
       onSubmit={(e) => {
         e.preventDefault();
         props.onSubmit();
       }}
-      aria-label="ฟอร์มตั้งค่าการจำลอง"
+      aria-label="ตั้งค่าการจำลอง"
     >
-      <Card>
-        <CardContent className="space-y-6">
-          {/* 01 — จำนวนโปรเซส */}
-          <section>
-            <StepHeading no="1" title="จำนวนโปรเซส" />
-            <div className="flex items-center gap-2.5">
-              <div className="space-y-1.5">
-                <Label htmlFor="process-count" className="sr-only">
-                  จำนวนโปรเซส (1–10)
-                </Label>
-                <Input
-                  id="process-count"
-                  type="number"
-                  min={1}
-                  max={10}
-                  aria-label="จำนวนโปรเซส (1–10)"
-                  value={props.processCount}
-                  onChange={(e) =>
-                    props.onProcessCountChange(
-                      e.target.value === "" ? "" : Number(e.target.value)
-                    )
-                  }
-                  aria-invalid={Boolean(props.processCountError)}
-                  className="w-20 text-center font-mono tabular text-base font-semibold"
-                />
-              </div>
-              <div className="flex gap-1.5 pt-0.5">
-                {[3, 5, 10].map((n) => (
-                  <Button
-                    key={n}
-                    type="button"
-                    variant={props.processCount === n ? "secondary" : "outline"}
-                    size="sm"
-                    onClick={() => props.onProcessCountChange(n)}
-                    className="font-mono"
-                  >
-                    {n}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            {props.processCountError ? (
-              <p className="mt-2 text-xs text-destructive">{props.processCountError}</p>
-            ) : (
-              <p className="mt-2 text-xs text-muted-foreground">
-                ระบบสร้างแถว P1–P{formatProcessCount(props.processCount)} ให้อัตโนมัติ
-              </p>
-            )}
-          </section>
-
-          <Separator />
-
-          {/* 02 — Burst Time */}
-          <section>
-            <StepHeading no="2" title="Burst Time" />
-            <div className="mb-3 flex items-center gap-2">
-              <Tabs
-                value={props.btMode}
-                onValueChange={(v) => props.onBtModeChange(v as BtMode)}
+      <Card className="gap-0 py-0 lg:min-h-0 lg:flex-1">
+        <CardContent className="divide-y divide-border px-0 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-contain">
+          {/* จำนวนโปรเซส */}
+          <Section
+            title="จำนวนโปรเซส"
+            hint={
+              props.processCountError ? (
+                <p id="process-count-error" className="mt-2 text-xs text-destructive">
+                  {props.processCountError}
+                </p>
+              ) : (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  สร้าง P1–P{props.processCount === "" ? "n" : props.processCount} ให้อัตโนมัติ ·
+                  สูงสุด 10
+                </p>
+              )
+            }
+          >
+            <div className="flex flex-wrap items-center gap-3">
+              <NumberStepper
+                id="process-count"
+                label="จำนวนโปรเซส (1–10)"
+                value={countValue}
+                max={10}
+                invalid={Boolean(props.processCountError)}
+                describedBy={props.processCountError ? "process-count-error" : undefined}
+                onChange={(next) =>
+                  props.onProcessCountChange(next === "" ? "" : Number(next))
+                }
+              />
+              <ToggleGroup
+                type="single"
+                variant="outline"
+                size="sm"
+                spacing={0}
+                value={[3, 5, 10].includes(Number(countValue)) ? countValue : ""}
+                onValueChange={(v) => v && props.onProcessCountChange(Number(v))}
+                aria-label="จำนวนโปรเซสสำเร็จรูป"
               >
-                <TabsList>
-                  <TabsTrigger value="random">สุ่มอัตโนมัติ</TabsTrigger>
-                  <TabsTrigger value="manual">กรอกเอง</TabsTrigger>
-                </TabsList>
-              </Tabs>
-              {props.btMode === "random" && (
+                {["3", "5", "10"].map((n) => (
+                  <ToggleGroupItem key={n} value={n} className="w-9 font-mono text-xs">
+                    {n}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            </div>
+          </Section>
+
+          {/* Burst Time */}
+          <Section
+            title="Burst Time"
+            action={
+              props.btMode === "random" ? (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -147,151 +208,131 @@ export default function SchedulingForm(props: SchedulingFormProps) {
                       variant="ghost"
                       size="sm"
                       onClick={props.onReshuffle}
-                      className="gap-1.5"
+                      className="-my-1 text-muted-foreground"
                     >
-                      <Dices className="size-3.5" aria-hidden />
+                      <Dices aria-hidden />
                       สุ่มใหม่
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>สุ่มค่า Burst Time ทุกโปรเซสใหม่</TooltipContent>
+                  <TooltipContent>สุ่มจำนวนเต็ม 1–10 ให้ทุกโปรเซสใหม่</TooltipContent>
                 </Tooltip>
-              )}
-            </div>
+              ) : null
+            }
+          >
+            <Tabs
+              value={props.btMode}
+              onValueChange={(v) => props.onBtModeChange(v as BtMode)}
+              className="mb-4"
+            >
+              <TabsList className="w-full">
+                <TabsTrigger value="random">สุ่มอัตโนมัติ</TabsTrigger>
+                <TabsTrigger value="manual">กรอกเอง</TabsTrigger>
+              </TabsList>
+            </Tabs>
             <ProcessTableInput
               burstTimes={props.burstTimes}
               readOnly={props.btMode === "random"}
               onChange={props.onBurstTimeChange}
               errorFor={props.burstTimeError}
             />
-          </section>
+          </Section>
 
-          <Separator />
-
-          {/* 03 — อัลกอริทึม */}
-          <section>
-            <StepHeading no="3" title="อัลกอริทึมที่ต้องการเปรียบเทียบ" />
+          {/* อัลกอริทึม */}
+          <Section
+            title="อัลกอริทึม"
+            action={<span className="text-xs text-muted-foreground">เลือกได้หลายแบบ</span>}
+            hint={
+              props.algorithmError ? (
+                <p className="mt-2 text-xs text-destructive">{props.algorithmError}</p>
+              ) : null
+            }
+          >
             <div className="space-y-2">
-              {ALGORITHM_ORDER.map(({ key, name }) => {
+              {ALGORITHM_ORDER.map((name) => {
+                const key = KEY_OF[name];
                 const meta = ALGORITHM_META[name];
                 const checked = algorithms[key];
-                const inputId = `algorithm-${key}`;
                 return (
-                  <label
+                  <div
                     key={key}
-                    htmlFor={inputId}
                     className={cn(
-                      "flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors",
-                      "has-focus-visible:ring-2 has-focus-visible:ring-ring/50 has-focus-visible:outline-none",
-                      checked
-                        ? `${meta.softBg} ${meta.border}`
-                        : "border-border hover:bg-secondary/50"
+                      "rounded-lg border transition-colors duration-150",
+                      checked ? "border-foreground/15 bg-surface-2" : "border-border hover:bg-surface-2/60",
+                      props.algorithmError && "border-destructive/40"
                     )}
                   >
-                    <Checkbox
-                      id={inputId}
-                      checked={checked}
-                      onCheckedChange={(v) => props.onAlgorithmToggle(key, v === true)}
-                      className="data-[state=checked]:border-transparent"
-                      // ให้สีเรืองตามอัลกอริทึมเมื่อเลือก (tailwind ไม่รู้จัก class แบบ dynamic)
-                      style={checked ? { backgroundColor: "currentColor" } : undefined}
-                    />
-                    <span
-                      className={cn(
-                        "size-2.5 shrink-0 rounded-[3px] transition-opacity",
-                        meta.dot,
-                        checked ? "opacity-100" : "opacity-25"
-                      )}
-                      aria-hidden
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-medium text-foreground">
-                        {meta.fullName}
-                        <span className="ml-1.5 font-mono text-xs text-muted-foreground">
-                          {meta.label}
+                    <label
+                      htmlFor={`algorithm-${key}`}
+                      className="flex cursor-pointer items-center gap-3 px-3 py-2.5"
+                    >
+                      <Checkbox
+                        id={`algorithm-${key}`}
+                        checked={checked}
+                        onCheckedChange={(v) => props.onAlgorithmToggle(key, v === true)}
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-2">
+                          <span
+                            className={cn(
+                              "size-2 shrink-0 rounded-[2px] transition-opacity",
+                              meta.fill,
+                              !checked && "opacity-40"
+                            )}
+                            aria-hidden
+                          />
+                          <span className="truncate text-sm text-foreground">{meta.name}</span>
+                          <span className="text-xs text-subtle">{meta.short}</span>
                         </span>
                       </span>
-                      <span className="block truncate text-xs text-muted-foreground">
-                        {meta.tagline}
-                      </span>
-                    </span>
-                    {checked && <Check className={cn("size-4", meta.text)} aria-hidden />}
-                  </label>
+                    </label>
+
+                    {name === "RR" && checked && (
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-hairline px-3 py-2.5 pl-10">
+                        <label htmlFor="time-quantum" className="text-xs text-muted-foreground">
+                          Time Quantum
+                        </label>
+                        <NumberStepper
+                          id="time-quantum"
+                          label="Time Quantum"
+                          value={props.timeQuantum}
+                          invalid={Boolean(props.timeQuantumError)}
+                          describedBy={props.timeQuantumError ? "time-quantum-error" : undefined}
+                          onChange={props.onTimeQuantumChange}
+                        />
+                        {props.timeQuantumError && (
+                          <p id="time-quantum-error" className="w-full text-xs text-destructive">
+                            {props.timeQuantumError}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
-
-            {algorithms.rr && (
-              <div className="mt-3 rounded-lg border bg-muted/40 p-3">
-                <Label htmlFor="time-quantum" className="text-xs text-muted-foreground">
-                  Time Quantum
-                </Label>
-                <div className="mt-1.5 flex items-center gap-2">
-                  <div className="inline-flex items-center overflow-hidden rounded-lg border bg-background focus-within:ring-1 focus-within:ring-ring">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={() => adjustQuantum(-1)}
-                      aria-label="ลด Time Quantum"
-                      className="rounded-none border-r"
-                    >
-                      <Minus className="size-3.5" aria-hidden />
-                    </Button>
-                    <Input
-                      id="time-quantum"
-                      type="number"
-                      min={1}
-                      value={props.timeQuantum}
-                      onChange={(e) => props.onTimeQuantumChange(e.target.value)}
-                      aria-invalid={Boolean(props.timeQuantumError)}
-                      className="w-14 rounded-none border-0 text-center font-mono tabular font-semibold focus-visible:ring-0 focus-visible:border-0"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={() => adjustQuantum(1)}
-                      aria-label="เพิ่ม Time Quantum"
-                      className="rounded-none border-l"
-                    >
-                      <Plus className="size-3.5" aria-hidden />
-                    </Button>
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    จำนวนหน่วยเวลาต่อรอบของแต่ละโปรเซส
-                  </span>
-                </div>
-                {props.timeQuantumError && (
-                  <p className="mt-2 text-xs text-destructive">{props.timeQuantumError}</p>
-                )}
-              </div>
-            )}
-          </section>
-
-          <Separator />
-
-          {/* actions */}
-          <section className="space-y-2">
-            <Button type="submit" className="w-full">
-              คำนวณผลลัพธ์
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={props.onReset}
-              className="w-full gap-1.5"
-            >
-              <RotateCcw className="size-3.5" aria-hidden />
-              ล้างค่า
-            </Button>
-          </section>
+          </Section>
         </CardContent>
+
+        <CardFooter className="flex-col items-stretch gap-2 border-t bg-card px-5 py-4">
+          <Button
+            id="calculate-primary"
+            type="submit"
+            size="lg"
+            className="h-10 w-full text-sm font-bold"
+          >
+            คำนวณผลลัพธ์
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={props.onReset}
+            className="h-9 w-full text-muted-foreground"
+          >
+            <RotateCcw aria-hidden />
+            ล้างค่า
+          </Button>
+        </CardFooter>
       </Card>
     </form>
   );
-}
-
-/** แสดงจำนวนโปรเซสแบบปลอดภัยเมื่อยังไม่กรอก */
-function formatProcessCount(n: number | ""): string {
-  return n === "" ? "n" : String(n);
 }

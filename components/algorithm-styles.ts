@@ -1,71 +1,48 @@
 import type { AlgorithmName } from "@/lib/scheduling/types";
 
 /**
- * ข้อมูลประจำอัลกอริทึม — แหล่งเดียวของสี ป้ายกำกับ และคำอธิบาย
- * ธีม premium dark: สีจางลงเมื่อเป็นพื้น (opacity ต่ำ) สว่างขึ้นเมื่อเป็นตัว
- * คลาสสีเป็น literal เพื่อให้ Tailwind JIT มองเห็น
+ * ข้อมูลประจำอัลกอริทึม — แหล่งเดียวของชื่อ คำอธิบาย และสี
+ * สีคือ "ข้อมูล": ใช้กับ mark (จุด แท่ง เส้น) เท่านั้น ข้อความใช้ text token เสมอ
+ * ค่า hex อยู่ใน globals.css (--algo-*) ผ่าน validator แล้ว; ที่นี่เก็บชื่อคลาสแบบ literal ให้ Tailwind เห็น
  */
 export const ALGORITHM_META: Record<
   AlgorithmName,
   {
-    label: string
-    fullName: string
-    tagline: string
-    dot: string
-    bar: string
-    softBg: string
+    short: string
+    name: string
+    rule: string
+    /** พื้นหลังของ mark */
+    fill: string
+    /** เส้นขอบ/วงแหวน (ใช้ตอนเลือก) */
     ring: string
-    text: string
-    border: string
+    /** ค่า CSS variable สำหรับ style inline */
+    cssVar: string
   }
 > = {
   FCFS: {
-    label: "FCFS",
-    fullName: "First-Come, First-Served",
-    tagline: "เข้าก่อน–ออกก่อน ไม่มีการแทรก",
-    dot: "bg-sky-400",
-    bar: "bg-sky-400",
-    softBg: "bg-sky-400/10",
-    ring: "ring-sky-400/40",
-    text: "text-sky-300",
-    border: "border-sky-400/30",
+    short: "FCFS",
+    name: "First-Come, First-Served",
+    rule: "ทำตามลำดับที่เข้าคิว P1 → Pn จนเสร็จทีละตัว",
+    fill: "bg-fcfs",
+    ring: "ring-fcfs/60",
+    cssVar: "var(--algo-fcfs)",
   },
   SJF: {
-    label: "SJF",
-    fullName: "Shortest Job First",
-    tagline: "งานสั้นสุดก่อน (แบบไม่แทรก)",
-    dot: "bg-emerald-400",
-    bar: "bg-emerald-400",
-    softBg: "bg-emerald-400/10",
-    ring: "ring-emerald-400/40",
-    text: "text-emerald-300",
-    border: "border-emerald-400/30",
+    short: "SJF",
+    name: "Shortest Job First",
+    rule: "เลือก Burst Time น้อยสุดก่อน ไม่แทรกกลางคัน (เท่ากัน → เลขน้อยก่อน)",
+    fill: "bg-sjf",
+    ring: "ring-sjf/60",
+    cssVar: "var(--algo-sjf)",
   },
   RR: {
-    label: "RR",
-    fullName: "Round Robin",
-    tagline: "แบ่งเวลาตาม Time Quantum",
-    dot: "bg-amber-400",
-    bar: "bg-amber-400",
-    softBg: "bg-amber-400/10",
-    ring: "ring-amber-400/40",
-    text: "text-amber-300",
-    border: "border-amber-400/30",
+    short: "RR",
+    name: "Round Robin",
+    rule: "วนคิวให้คนละไม่เกิน Time Quantum ยังไม่เสร็จกลับไปต่อท้าย",
+    fill: "bg-rr",
+    ring: "ring-rr/60",
+    cssVar: "var(--algo-rr)",
   },
 };
 
-/** สีแท่ง Gantt ต่อโปรเซส — hue วน 8 สี โทน 400 เข้ากับพื้นเข้ม ตัวอักษรบนแท่งเป็นสีเข้ม */
-export const PROCESS_BAR_COLORS = [
-  "bg-sky-400",
-  "bg-violet-400",
-  "bg-emerald-400",
-  "bg-amber-400",
-  "bg-rose-400",
-  "bg-teal-400",
-  "bg-indigo-400",
-  "bg-fuchsia-400",
-];
-
-export function processBarColor(processId: number): string {
-  return PROCESS_BAR_COLORS[(processId - 1) % PROCESS_BAR_COLORS.length];
-}
+export const ALGORITHM_ORDER: AlgorithmName[] = ["FCFS", "SJF", "RR"];

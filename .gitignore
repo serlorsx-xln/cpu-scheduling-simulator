@@ -42,3 +42,8 @@ next-env.d.ts
 
 # zcode session artifacts
 .zcode/
+
+# impeccable: review captures, decision-page state and hook cache are local artifacts
+.impeccable/review/
+.impeccable/questions/
+.impeccable/hook.cache.json

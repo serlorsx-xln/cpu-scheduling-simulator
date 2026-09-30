@@ -20,28 +20,27 @@
 - มี error = ผลลัพธ์เดิมถูกล้าง ไม่แสดงผลจากข้อมูลที่ผิด
 - **ไม่ใช้ `alert()`**
 
-## 9.2 Design System (ธีม shadcn/ui premium dark)
+## 9.2 Design System (สรุป — ฉบับเต็มที่ [DESIGN.md](../DESIGN.md))
 
 | ส่วน | ค่า |
 |---|---|
-| UI framework | **shadcn/ui 100%** (style radix-nova): Card, Button, Input, Label, Table, Badge, Separator, Tabs, Checkbox, Tooltip |
-| ฟอนต์ UI | **LINE Seed Sans TH** self-host woff2 (SIL OFL 1.1) ผ่าน `next/font/local` — Regular 400 / Bold 700 |
-| ฟอนต์ตัวเลข | IBM Plex Mono (next/font/google) + `tabular` (font-variant-numeric) ในตาราง/AVG/q/legend |
-| สีทั้งหมด | shadcn design tokens (oklch): `--background` oklch(0.145 0.005 286), `--card` oklch(0.185...), `--border` ขาว 10% — ความลึกจาก border + พื้น 3 ระดับ ไม่มี glow/gradient ประดับ |
-| ปุ่มหลัก | shadcn Button default (`--primary` oklch(0.922 0 0) พื้นสว่าง ตัวอักษรเข้ม) |
-| รูปทรง | คมแบบแม่นยำ: จุดสี `rounded-[3px]`, แท่ง `rounded-sm`, ไม่มี pill `rounded-full` ใน UI |
-| สีอัลกอริทึม | ศูนย์กลางที่ `components/algorithm-styles.ts`: FCFS sky, SJF emerald, RR amber (dot/bar/softBg/ring/text/border) — ใช้ร่วมทั้งฟอร์ม การ์ด แผงเปรียบเทียบ legend |
-| สีโปรเซสใน Gantt | palette 8 สีโทน 400 วนตาม id (`processBarColor`) ตัวอักษรบนแท่งเป็น `text-primary-foreground` |
-| Animation | `animate-fade-up` (fade + translateY 8px, 0.4s) ไล่ delay 70ms ต่อการ์ด — ปิดทั้งหมดเมื่อ `prefers-reduced-motion: reduce` |
-| Responsive | grid `lg:grid-cols-[400px_minmax(0,1fr)]`, ฟอร์ม sticky `top-8` + `max-h-[calc(100svh-4rem)] overflow-y-auto`, ตารางหุ้ม `overflow-x-auto` ในตัว shadcn Table |
-| Spinner input เลข | ซ่อน (`appearance: textfield`) — กรอกเอง/ใช้ stepper หรือปุ่มลัด |
-| Metadata | openGraph + viewport themeColor ใน `app/layout.tsx` |
+| UI primitives | shadcn/ui (radix-nova): Card, Button, Input, Table, Badge, Tabs, ToggleGroup, Checkbox, Tooltip, Kbd — Badge ปรับมุมเป็น 5px (ไม่มีทรงเม็ดยา) |
+| ฟอนต์ | **LINE Seed Sans TH** (self-host woff2, SIL OFL 1.1) สำหรับข้อความและตัวเลขขนาดใหญ่ · **Geist Mono** เฉพาะตัวเลขที่ต้องเรียงคอลัมน์ (ตาราง แกนเวลา สูตร) เพราะ LINE Seed ไม่มี tabular figures |
+| พื้น | 3 ระดับ: หน้า `#0c0d0f` → การ์ด `#131417` → `#1a1b1f` / `#232429`; เส้นขอบ hairline ขาว 8%; ไม่มี gradient/glass/เงาประดับ |
+| ข้อความ | foreground `#ededef` (15.8:1 บนการ์ด) · muted `#9d9da6` (6.9:1) · subtle `#868690` (5.1:1) · destructive `#f07070` (6.4:1) |
+| สีข้อมูล | FCFS `#3987e5` · SJF `#199e70` · RR `#d95926` — ผ่าน palette validator ทั้ง all-pairs และตาบอดสีบน `#131417`; ใช้กับ mark เท่านั้น ข้อความไม่ใช้สีข้อมูล |
+| Gantt | segment กลาง `#2c2d33` · โปรเซสที่โฟกัสยกเป็นสีสว่าง (emphasis) แทนการวนสี 10 สี |
+| ปุ่มหลัก | shadcn Button default (พื้นสว่าง ตัวอักษรเข้ม) |
+| มุม | 3–10px ตามขนาด ไม่มี pill |
+| Motion | transition 150–240ms, wipe เปิดไทม์ไลน์หนึ่งครั้งหลังคำนวณ, การ์ด rise 240ms — ปิดทั้งหมดเมื่อ `prefers-reduced-motion` |
+| พื้นผิวเบราว์เซอร์ | สี selection, caret, scrollbar, focus ring ตั้งจาก token; spinner ของ input number ซ่อน (ใช้ stepper) |
 
 ## 9.3 Accessibility และ UX
 
-- ทุก input มี `<label>`/aria-label ผูกถูกต้อง ("จำนวนโปรเซส (1–10)", "P{k} Burst Time", "Time Quantum")
-- checkbox ของการ์ดอัลกอริทึมเป็น `sr-only` แต่ยังเป็น role checkbox จริง คีย์บอร์ดใช้ได้
-- ปุ่ม stepper มี aria-label แยก ("เพิ่ม/ลด Time Quantum")
-- กด Enter ในฟอร์ม = คำนวณ (`form onSubmit` → handleCalculate)
-- Error ชัดเจนด้วยตัวหนังสือ ไม่ใช้แค่สี; กล่อง error มี `role="alert"`
-- คำนวณสำเร็จ → `scrollIntoView` ไปยังผลลัพธ์อย่างนุ่มนวล
+- ทุก input มี label ผูกจริง: "จำนวนโปรเซส (1–10)", "P{k} Burst Time", "Time Quantum"; ช่องที่ผิดมี `aria-invalid` + `aria-describedby` ชี้ข้อความ error
+- Checkbox อัลกอริทึมเป็น shadcn Checkbox (Radix) กดได้ทั้งแถว คีย์บอร์ดใช้ได้; stepper มี aria-label "เพิ่ม/ลด…"
+- Enter ในฟอร์ม และ ⌘/Ctrl+Enter ทั้งหน้า = คำนวณ (`noValidate` เพื่อให้ validation E1–E7 ของเราทำงานเสมอ)
+- กล่อง error `role="alert"` แต่ละข้อเป็นปุ่มพาไปโฟกัสช่องที่ต้องแก้; error สื่อด้วยข้อความ ไม่ใช่สีอย่างเดียว
+- ไทม์ไลน์เป็น `role="group"` โฟกัสได้ ใช้ ←/→/Home/End/Esc เลื่อนเคอร์เซอร์เวลา สถานะอ่านผ่าน `aria-live`
+- ทุกค่าบนกราฟอ่านได้จากตารางหรือข้อความด้วย (tooltip/hover ไม่ใช่ทางเดียว)
+- จอเล็ก: คำนวณแล้วเลื่อนไปผลลัพธ์อัตโนมัติ; แถบปุ่มคำนวณล่างจอเป็น `inert` เมื่อถูกซ่อน
