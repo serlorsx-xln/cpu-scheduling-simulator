@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import ComparisonSummary from "@/components/ComparisonSummary";
 import ErrorSummary from "@/components/ErrorSummary";
 import ResultCard from "@/components/ResultCard";
 import SchedulingForm, {
@@ -17,13 +18,13 @@ function randomBts(n: number): string[] {
   return Array.from({ length: n }, () => String(1 + Math.floor(Math.random() * 10)));
 }
 
-const ALGORITHM_NAMES = { fcfs: "FCFS", sjf: "SJF", rr: "RR" } as const;
-
 function resizeBts(current: string[], n: number): string[] {
   const next = current.slice(0, n);
   while (next.length < n) next.push("");
   return next;
 }
+
+const ALGORITHM_NAMES = { fcfs: "FCFS", sjf: "SJF", rr: "RR" } as const;
 
 export default function Home() {
   const [processCount, setProcessCount] = useState<number | "">(3);
@@ -85,7 +86,7 @@ export default function Home() {
       })
     );
     requestAnimationFrame(() => {
-      resultsRef.current?.scrollIntoView({ behavior: "smooth" });
+      resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }
 
@@ -111,46 +112,70 @@ export default function Home() {
   }
 
   return (
-    <main className="mx-auto max-w-[900px] px-4 py-8">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">
-          🖥 CPU Scheduling Simulator
+    <main className="mx-auto max-w-6xl px-4 py-8 lg:py-12">
+      <header className="mb-8">
+        <p className="text-[11px] font-semibold tracking-[0.28em] text-slate-400 uppercase">
+          CPU Scheduling Simulator
+        </p>
+        <h1 className="mt-1.5 text-3xl font-bold tracking-tight text-slate-900">
+          เปรียบเทียบอัลกอริทึมจัดคิว CPU
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1.5 text-sm text-slate-500">
           FCFS · SJF · Round Robin — ทุกโปรเซสมี Arrival Time = 0
         </p>
       </header>
 
-      <SchedulingForm
-        processCount={processCount}
-        onProcessCountChange={handleProcessCountChange}
-        btMode={btMode}
-        onBtModeChange={handleBtModeChange}
-        burstTimes={burstTimes}
-        onBurstTimeChange={(index, value) =>
-          setBurstTimes((current) => current.map((v, i) => (i === index ? value : v)))
-        }
-        onReshuffle={() => setBurstTimes(randomBts(burstTimes.length))}
-        algorithms={algorithms}
-        onAlgorithmToggle={(key, checked) =>
-          setAlgorithms((current) => ({ ...current, [key]: checked }))
-        }
-        timeQuantum={timeQuantum}
-        onTimeQuantumChange={setTimeQuantum}
-        onReset={handleReset}
-        onSubmit={handleCalculate}
-        processCountError={processCountError}
-        burstTimeError={burstTimeError}
-        timeQuantumError={timeQuantumError}
-      />
+      <div className="grid items-start gap-6 lg:grid-cols-[400px_minmax(0,1fr)]">
+        <div className="lg:sticky lg:top-8">
+          <SchedulingForm
+            processCount={processCount}
+            onProcessCountChange={handleProcessCountChange}
+            btMode={btMode}
+            onBtModeChange={handleBtModeChange}
+            burstTimes={burstTimes}
+            onBurstTimeChange={(index, value) =>
+              setBurstTimes((current) => current.map((v, i) => (i === index ? value : v)))
+            }
+            onReshuffle={() => setBurstTimes(randomBts(burstTimes.length))}
+            algorithms={algorithms}
+            onAlgorithmToggle={(key, checked) =>
+              setAlgorithms((current) => ({ ...current, [key]: checked }))
+            }
+            timeQuantum={timeQuantum}
+            onTimeQuantumChange={setTimeQuantum}
+            onReset={handleReset}
+            onSubmit={handleCalculate}
+            processCountError={processCountError}
+            burstTimeError={burstTimeError}
+            timeQuantumError={timeQuantumError}
+          />
+        </div>
 
-      <div className="mt-6">
-        <ErrorSummary issues={errors} />
+        <div ref={resultsRef} className="min-w-0 space-y-6">
+          <ErrorSummary issues={errors} />
+
+          {results && <ComparisonSummary results={results} />}
+
+          {results?.map((result, i) => (
+            <ResultCard key={result.algorithm} result={result} index={i} />
+          ))}
+
+          {!results && errors.length === 0 && (
+            <div className="flex h-full min-h-56 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 p-10 text-center">
+              <p className="text-sm font-medium text-slate-400">
+                กรอกข้อมูลด้านซ้ายแล้วกด &ldquo;คำนวณผลลัพธ์&rdquo;
+              </p>
+              <p className="mt-1 text-xs text-slate-300">
+                ตาราง ST / CT / TAT / WT และ Gantt Chart ของแต่ละอัลกอริทึมจะแสดงที่นี่
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div ref={resultsRef} className="mt-6 space-y-6">
-        {results?.map((result) => <ResultCard key={result.algorithm} result={result} />)}
-      </div>
+      <footer className="mt-12 border-t border-slate-200 pt-4 pb-2 text-xs text-slate-400">
+        Term Project — CPU Scheduling Simulator · FCFS / SJF / Round Robin
+      </footer>
     </main>
   );
 }

@@ -15,22 +15,30 @@
 | E7 | ไม่เลือกอัลกอริทึมใดเลย | กรุณาเลือกอัลกอริทึมอย่างน้อย 1 แบบ |
 
 กฎการแสดง:
-- E4 แสดงซ้ำต่อแถวที่ผิด (ค่าไม่ถูกต้อง เช่น 0, -1, 2.5); ถ้าว่างหลายแถวใช้ E5 แทน
-- แสดงทั้งแบบ inline ใต้ช่องที่ผิด และรวมเป็น bullet ในกล่องสรุป (โซน B)
+- E4 แสดงซ้ำต่อแถวที่ค่าไม่ถูกต้อง (0, -1, 2.5); ถ้าว่างหลายแถวใช้ E5 แทน
+- แสดงทั้ง inline ใต้ช่องที่ผิด (ขอบแดง + จุดสถานะแดงในตาราง BT) และรวมเป็น bullet ในกล่อง ErrorSummary
+- มี error = ผลลัพธ์เดิมถูกล้าง ไม่แสดงผลจากข้อมูลที่ผิด
 - **ไม่ใช้ `alert()`**
 
-## 9.2 Styling (Tailwind)
+## 9.2 Design System
 
-- Layout: container สูงสุด ~ 900px กึ่งกลาง, การ์ด `rounded-xl border shadow-sm`
-- ตาราง: `table-auto` หัวตารางพื้นเทาเข้มตัวอักษรขาว คอลัมน์ตัวเลขชิดขวา แถวสรุป AVG พื้นสีอ่อนตัวหนา
-- สีประจำอัลกอริทึม (หัวการ์ด + Gantt): FCFS = น้ำเงิน, SJF = เขียว, RR = ส้ม; สีโปรเซสใน Gantt ใช้ palette วน 8 สีตาม id
-- Error: กล่อง `bg-red-50 border-red-400 text-red-700`, ช่องผิด `border-red-500 ring-red-300`
-- Responsive: ตารางหุ้มด้วย `overflow-x-auto` ให้เลื่อนดูได้บนจอแคบ
+| ส่วน | ค่า |
+|---|---|
+| ฟอนต์ UI | IBM Plex Sans Thai (next/font, subsets thai+latin, 300–700) ผ่าน `--font-sans` |
+| ฟอนต์ตัวเลข | IBM Plex Mono ผ่าน `--font-mono` + `tabular` (font-variant-numeric) ในตาราง/AVG/q |
+| พื้นหลังหน้า | gradient เรืองแสงจางสองฟ้า-ส้มบนพื้น slate-100 (`globals.css`) |
+| การ์ด | `rounded-2xl border border-slate-200/80 bg-white shadow-sm` |
+| ปุ่มหลัก | พื้น slate-900 ตัวอักษรขาว hover slate-700 active scale 0.99 |
+| สีอัลกอริทึม | ศูนย์กลางที่ `components/algorithm-styles.ts`: FCFS น้ำเงิน, SJF เขียว, RR ส้ม (dot/bar/softBg/ring) — ใช้ร่วมทั้งฟอร์ม การ์ด แผงเปรียบเทียบ |
+| สีโปรเซสใน Gantt | palette 8 สีวนตาม id (`processBarColor`) |
+| Animation | `animate-fade-up` (fade + translateY, 0.45s) ใช้กับ ErrorSummary / แผงเปรียบเทียบ / การ์ดผลลัพธ์ (ไล่ delay 70ms ต่อใบ) |
+| Responsive | grid `lg:grid-cols-[400px_1fr]`, ฟอร์ม sticky บน lg, ตารางหุ้ม `overflow-x-auto` |
 
 ## 9.3 Accessibility และ UX
 
-- ทุก input มี `<label>` ผูกถูกต้อง (จำนวนโปรเซส, BT รายแถว "P1 Burst Time", Time Quantum)
-- กด Enter ในฟอร์ม = คำนวณ (ใช้ `<form onSubmit>`)
-- Error ชัดเจนด้วยตัวหนังสือ ไม่ใช้แค่สีบอก
-- คำนวณสำเร็จ → เลื่อนจอไปโซน C ให้เห็นผลทันที
-- ปุ่ม "ล้างค่า" ต้องไม่ทำงานเมื่อไม่มีอะไรให้ล้าง (disabled หรือ no-op)
+- ทุก input มี `<label>`/aria-label ผูกถูกต้อง ("จำนวนโปรเซส (1–10)", "P{k} Burst Time", "Time Quantum")
+- checkbox ของการ์ดอัลกอริทึมเป็น `sr-only` แต่ยังเป็น role checkbox จริง คีย์บอร์ดใช้ได้
+- ปุ่ม stepper มี aria-label แยก ("เพิ่ม/ลด Time Quantum")
+- กด Enter ในฟอร์ม = คำนวณ (`form onSubmit` → handleCalculate)
+- Error ชัดเจนด้วยตัวหนังสือ ไม่ใช้แค่สี; กล่อง error มี `role="alert"`
+- คำนวณสำเร็จ → `scrollIntoView` ไปยังผลลัพธ์อย่างนุ่มนวล

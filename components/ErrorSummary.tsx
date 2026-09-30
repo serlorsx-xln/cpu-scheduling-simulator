@@ -7,10 +7,10 @@ export default function ErrorSummary({ issues }: { issues: ValidationIssue[] }) 
   return (
     <div
       role="alert"
-      className="rounded-xl border border-red-400 bg-red-50 p-4 text-red-700"
+      className="animate-fade-up rounded-2xl border border-red-200 bg-red-50/80 p-4"
     >
-      <p className="mb-2 font-bold">⚠ พบข้อผิดพลาด</p>
-      <ul className="list-disc space-y-1 pl-5 text-sm">
+      <p className="text-sm font-bold text-red-700">⚠ พบข้อผิดพลาด กรุณาแก้ไขก่อนคำนวณ</p>
+      <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-red-600">
         {issues.map((issue, i) => (
           <li key={i}>{issue.message}</li>
         ))}
