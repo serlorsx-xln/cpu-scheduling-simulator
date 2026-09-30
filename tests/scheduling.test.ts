@@ -232,6 +232,21 @@ describe("validateInput", () => {
     }
   );
 
+  it("BT ว่าง 1 แถว + อีกแถวกรอกค่าผิด → รายงานครบทั้งสองแถว", () => {
+    const issues = validateInput(raw({ burstTimes: ["5", "", "abc"] }));
+    const btIssues = issues.filter((i) => i.field === "burstTime");
+    expect(btIssues.map((i) => i.processId).sort()).toEqual([2, 3]);
+  });
+
+  it("BT ว่างหลายแถว + แถวกรอกค่าผิด → E5 รวม + E4 ระบุแถวผิด", () => {
+    const issues = validateInput(raw({ burstTimes: ["", "", "abc"] }));
+    const messages = issues.map((i) => i.message);
+    expect(messages).toContain("กรุณากรอก Burst Time ให้ครบทุกโปรเซส");
+    expect(issues.find((i) => i.processId === 3)?.message).toBe(
+      "Burst Time ของ P3 ต้องเป็นจำนวนเต็มบวก"
+    );
+  });
+
   it("U-V6: BT ว่างหลายแถว → E5", () => {
     const issues = validateInput(raw({ burstTimes: ["", "", "8"] }));
     expect(issues).toHaveLength(1);

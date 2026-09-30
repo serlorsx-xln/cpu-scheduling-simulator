@@ -1,14 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Clock3, Cpu } from "lucide-react";
 
 import ComparisonSummary from "@/components/ComparisonSummary";
 import ErrorSummary from "@/components/ErrorSummary";
 import ResultCard from "@/components/ResultCard";
+import ResultsPlaceholder from "@/components/ResultsPlaceholder";
 import SchedulingForm, {
   type AlgorithmFlags,
   type BtMode,
 } from "@/components/SchedulingForm";
+import { Badge } from "@/components/ui/badge";
 import { runSimulation } from "@/lib/scheduling/simulate";
 import type { SimulationResult } from "@/lib/scheduling/types";
 import { validateInput } from "@/lib/validation";
@@ -112,70 +115,75 @@ export default function Home() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8 lg:py-12">
-      <header className="mb-8">
-        <p className="text-[11px] font-semibold tracking-[0.28em] text-slate-400 uppercase">
-          CPU Scheduling Simulator
-        </p>
-        <h1 className="mt-1.5 text-3xl font-bold tracking-tight text-slate-900">
-          เปรียบเทียบอัลกอริทึมจัดคิว CPU
-        </h1>
-        <p className="mt-1.5 text-sm text-slate-500">
-          FCFS · SJF · Round Robin — ทุกโปรเซสมี Arrival Time = 0
-        </p>
-      </header>
+    <div className="min-h-svh bg-background">
+      <main className="mx-auto max-w-6xl px-4 py-8 lg:px-8 lg:py-12">
+        {/* ── Header ──────────────────────────────────────────────── */}
+        <header className="mb-10 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <Badge variant="secondary" className="mb-3 gap-1.5 font-normal">
+              <Cpu className="size-3" aria-hidden />
+              Operating Systems · Term Project
+            </Badge>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground lg:text-4xl">
+              จำลองการจัดคิวงานของ CPU
+            </h1>
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground lg:text-base">
+              ประมวลผล FCFS, SJF และ Round Robin ด้วยชุดข้อมูลชุดเดียวกัน
+              พร้อมตารางผลลัพธ์ กราฟ Gantt และการเปรียบเทียบเวลารอเฉลี่ย
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Clock3 className="size-3.5" aria-hidden />
+            ทุกโปรเซสมี Arrival Time = 0
+          </div>
+        </header>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[400px_minmax(0,1fr)]">
-        <div className="lg:sticky lg:top-8">
-          <SchedulingForm
-            processCount={processCount}
-            onProcessCountChange={handleProcessCountChange}
-            btMode={btMode}
-            onBtModeChange={handleBtModeChange}
-            burstTimes={burstTimes}
-            onBurstTimeChange={(index, value) =>
-              setBurstTimes((current) => current.map((v, i) => (i === index ? value : v)))
-            }
-            onReshuffle={() => setBurstTimes(randomBts(burstTimes.length))}
-            algorithms={algorithms}
-            onAlgorithmToggle={(key, checked) =>
-              setAlgorithms((current) => ({ ...current, [key]: checked }))
-            }
-            timeQuantum={timeQuantum}
-            onTimeQuantumChange={setTimeQuantum}
-            onReset={handleReset}
-            onSubmit={handleCalculate}
-            processCountError={processCountError}
-            burstTimeError={burstTimeError}
-            timeQuantumError={timeQuantumError}
-          />
+        <div className="grid items-start gap-6 lg:grid-cols-[400px_minmax(0,1fr)]">
+          {/* ── คอลัมน์ตั้งค่า (ซ้าย) ─────────────────────────────── */}
+          <div className="lg:sticky lg:top-8">
+            <SchedulingForm
+              processCount={processCount}
+              onProcessCountChange={handleProcessCountChange}
+              btMode={btMode}
+              onBtModeChange={handleBtModeChange}
+              burstTimes={burstTimes}
+              onBurstTimeChange={(index, value) =>
+                setBurstTimes((current) => current.map((v, i) => (i === index ? value : v)))
+              }
+              onReshuffle={() => setBurstTimes(randomBts(burstTimes.length))}
+              algorithms={algorithms}
+              onAlgorithmToggle={(key, checked) =>
+                setAlgorithms((current) => ({ ...current, [key]: checked }))
+              }
+              timeQuantum={timeQuantum}
+              onTimeQuantumChange={setTimeQuantum}
+              onReset={handleReset}
+              onSubmit={handleCalculate}
+              processCountError={processCountError}
+              burstTimeError={burstTimeError}
+              timeQuantumError={timeQuantumError}
+            />
+          </div>
+
+          {/* ── คอลัมน์ผลลัพธ์ (ขวา) ─────────────────────────────── */}
+          <div ref={resultsRef} className="min-w-0 space-y-6">
+            <ErrorSummary issues={errors} />
+
+            {results && <ComparisonSummary results={results} />}
+
+            {results?.map((result, i) => (
+              <ResultCard key={result.algorithm} result={result} index={i} />
+            ))}
+
+            {!results && errors.length === 0 && <ResultsPlaceholder />}
+          </div>
         </div>
 
-        <div ref={resultsRef} className="min-w-0 space-y-6">
-          <ErrorSummary issues={errors} />
-
-          {results && <ComparisonSummary results={results} />}
-
-          {results?.map((result, i) => (
-            <ResultCard key={result.algorithm} result={result} index={i} />
-          ))}
-
-          {!results && errors.length === 0 && (
-            <div className="flex h-full min-h-56 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 p-10 text-center">
-              <p className="text-sm font-medium text-slate-400">
-                กรอกข้อมูลด้านซ้ายแล้วกด &ldquo;คำนวณผลลัพธ์&rdquo;
-              </p>
-              <p className="mt-1 text-xs text-slate-300">
-                ตาราง ST / CT / TAT / WT และ Gantt Chart ของแต่ละอัลกอริทึมจะแสดงที่นี่
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <footer className="mt-12 border-t border-slate-200 pt-4 pb-2 text-xs text-slate-400">
-        Term Project — CPU Scheduling Simulator · FCFS / SJF / Round Robin
-      </footer>
-    </main>
+        <footer className="mt-14 border-t pt-5 pb-2 text-xs text-muted-foreground">
+          CPU Scheduling Simulator — โปรเจกต์วิชา Operating Systems · เปรียบเทียบ FCFS /
+          SJF / Round Robin ด้วยชุดข้อมูลเดียวกัน
+        </footer>
+      </main>
+    </div>
   );
 }

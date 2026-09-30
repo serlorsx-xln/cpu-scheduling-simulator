@@ -51,28 +51,29 @@ export function validateInput(raw: RawFormInput): ValidationIssue[] {
   if (n > 0) {
     const rows = raw.burstTimes.slice(0, n);
     const parsed = rows.map(parseBurstTime);
-    const emptyRows = parsed.filter((p) => p.empty).length;
+    const emptyIndices = parsed.flatMap((p, i) => (p.empty ? [i] : []));
 
-    if (emptyRows > 1) {
+    // E5: ว่างหลายแถว → ข้อความเดียวรวม; ว่างแถวเดียว → E4 ระบุแถวนั้น
+    if (emptyIndices.length > 1) {
       issues.push({ field: "burstTime", message: "กรุณากรอก Burst Time ให้ครบทุกโปรเซส" });
-    } else if (emptyRows === 1) {
-      const index = parsed.findIndex((p) => p.empty);
+    } else if (emptyIndices.length === 1) {
       issues.push({
         field: "burstTime",
-        processId: index + 1,
-        message: `Burst Time ของ P${index + 1} ต้องเป็นจำนวนเต็มบวก`,
-      });
-    } else {
-      parsed.forEach((p, index) => {
-        if (p.value === null) {
-          issues.push({
-            field: "burstTime",
-            processId: index + 1,
-            message: `Burst Time ของ P${index + 1} ต้องเป็นจำนวนเต็มบวก`,
-          });
-        }
+        processId: emptyIndices[0] + 1,
+        message: `Burst Time ของ P${emptyIndices[0] + 1} ต้องเป็นจำนวนเต็มบวก`,
       });
     }
+
+    // E4: แถวที่ "กรอกแต่ค่าไม่ถูก" รายงานครบทุกแถว แม้มีแถวว่างปนอยู่
+    parsed.forEach((p, index) => {
+      if (!p.empty && p.value === null) {
+        issues.push({
+          field: "burstTime",
+          processId: index + 1,
+          message: `Burst Time ของ P${index + 1} ต้องเป็นจำนวนเต็มบวก`,
+        });
+      }
+    });
   }
 
   // E6: Time Quantum (เฉพาะเมื่อเลือก RR)

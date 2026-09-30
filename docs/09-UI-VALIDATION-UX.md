@@ -20,19 +20,21 @@
 - มี error = ผลลัพธ์เดิมถูกล้าง ไม่แสดงผลจากข้อมูลที่ผิด
 - **ไม่ใช้ `alert()`**
 
-## 9.2 Design System
+## 9.2 Design System (ธีม Dispatch Console)
 
 | ส่วน | ค่า |
 |---|---|
 | ฟอนต์ UI | IBM Plex Sans Thai (next/font, subsets thai+latin, 300–700) ผ่าน `--font-sans` |
-| ฟอนต์ตัวเลข | IBM Plex Mono ผ่าน `--font-mono` + `tabular` (font-variant-numeric) ในตาราง/AVG/q |
-| พื้นหลังหน้า | gradient เรืองแสงจางสองฟ้า-ส้มบนพื้น slate-100 (`globals.css`) |
-| การ์ด | `rounded-2xl border border-slate-200/80 bg-white shadow-sm` |
-| ปุ่มหลัก | พื้น slate-900 ตัวอักษรขาว hover slate-700 active scale 0.99 |
-| สีอัลกอริทึม | ศูนย์กลางที่ `components/algorithm-styles.ts`: FCFS น้ำเงิน, SJF เขียว, RR ส้ม (dot/bar/softBg/ring) — ใช้ร่วมทั้งฟอร์ม การ์ด แผงเปรียบเทียบ |
-| สีโปรเซสใน Gantt | palette 8 สีวนตาม id (`processBarColor`) |
-| Animation | `animate-fade-up` (fade + translateY, 0.45s) ใช้กับ ErrorSummary / แผงเปรียบเทียบ / การ์ดผลลัพธ์ (ไล่ delay 70ms ต่อใบ) |
-| Responsive | grid `lg:grid-cols-[400px_1fr]`, ฟอร์ม sticky บน lg, ตารางหุ้ม `overflow-x-auto` |
+| ฟอนต์ตัวเลข/ป้ายกำกับ | IBM Plex Mono ผ่าน `--font-mono` + `tabular` (font-variant-numeric) ในตาราง/AVG/q/หัวข้อสเต็ป |
+| พื้นหลังหน้า | `console-950` (#0a0e14) + กริดวิศวกรรมโปร่ง 36px (`globals.css`) |
+| แผง/การ์ด | `rounded-lg border border-white/10 bg-console-900` — ไม่มี shadow, ความลึกมาจากเส้น hairline และพื้นสองระดับ |
+| ปุ่มหลัก | พื้น amber-400 ตัวอักษร console-950 mono uppercase, hover amber-300, active translate-y-px |
+| สีสัญญาณ | amber ใช้กับ action หลักและค่าสำคัญสุด (WT/AVG WT) เท่านั้น; rose สงวนให้ error |
+| สีอัลกอริทึม | ศูนย์กลางที่ `components/algorithm-styles.ts`: FCFS sky, SJF emerald, RR amber (dot/bar/softBg/ring/text/border) — ใช้ร่วมทั้งฟอร์ม การ์ด แผงเปรียบเทียบ |
+| สีโปรเซสใน Gantt | palette 8 สีโทน 400 วนตาม id (`processBarColor`) ตัวอักษรบนแท่งเป็นสีเข้ม |
+| Animation | `animate-fade-up` (fade + translateY 8px, 0.4s) ใช้กับ ErrorSummary / แผงเปรียบเทียบ / การ์ดผลลัพธ์ (ไล่ delay 70ms ต่อใบ) |
+| Responsive | grid `lg:grid-cols-[380px_1fr]`, ฟอร์ม sticky บน lg, ตารางหุ้ม `overflow-x-auto` |
+| Spinner input เลข | ซ่อน (`appearance: textfield`) — กรอก/stepper เท่านั้น ให้ประสบการณ์เป็นเครื่องมือ |
 
 ## 9.3 Accessibility และ UX
 

@@ -1,3 +1,6 @@
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+
 interface ProcessTableInputProps {
   burstTimes: string[]
   /** โหมดสุ่ม: ช่อง readonly แต่ยังแสดงค่าที่ใช้คำนวณจริง */
@@ -15,42 +18,49 @@ export default function ProcessTableInput({
   errorFor,
 }: ProcessTableInputProps) {
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200">
+    <div className="overflow-hidden rounded-lg border">
       <table className="w-full table-auto text-sm">
         <thead>
-          <tr className="border-b border-slate-100 bg-slate-50/70 text-[11px] uppercase tracking-wider text-slate-400">
-            <th className="px-3 py-2 text-left font-semibold">Process</th>
-            <th className="px-3 py-2 text-left font-semibold">Burst Time</th>
+          <tr className="border-b bg-muted/50 text-[11px] tracking-wide text-muted-foreground uppercase">
+            <th className="px-3 py-2 text-left font-medium">Process</th>
+            <th className="px-3 py-2 text-right font-medium">Burst Time</th>
           </tr>
         </thead>
         <tbody>
           {burstTimes.map((bt, index) => {
             const error = errorFor(index + 1);
             return (
-              <tr key={index} className="border-b border-slate-50 last:border-0">
+              <tr
+                key={index}
+                className="border-b transition-colors last:border-0 hover:bg-muted/30"
+              >
                 <td className="px-3 py-1.5">
-                  <span className="inline-flex items-center gap-2 font-mono text-sm font-medium text-slate-700">
-                    <span className={`size-1.5 rounded-full ${error ? "bg-red-500" : "bg-slate-300"}`} />
+                  <span className="inline-flex items-center gap-2 font-mono text-sm font-medium text-foreground">
+                    <span
+                      className={cn(
+                        "size-1.5 rounded-[2px]",
+                        error ? "bg-destructive" : "bg-border"
+                      )}
+                    />
                     P{index + 1}
                   </span>
                 </td>
                 <td className="px-3 py-1.5">
-                  <input
+                  <Input
                     type="number"
                     min={1}
                     aria-label={`P${index + 1} Burst Time`}
+                    aria-invalid={Boolean(error)}
                     value={bt}
                     readOnly={readOnly}
                     onChange={(e) => onChange(index, e.target.value)}
-                    className={`w-24 rounded-lg border px-2.5 py-1.5 text-right font-mono tabular transition ${
-                      error
-                        ? "border-red-400 bg-red-50/60 ring-2 ring-red-100"
-                        : readOnly
-                          ? "border-transparent bg-slate-50 text-slate-600"
-                          : "border-slate-200 bg-white text-slate-800 focus:border-slate-400 focus:ring-2 focus:ring-slate-100 focus:outline-none"
-                    }`}
+                    className={cn(
+                      "h-8 w-20 border-0 px-2.5 py-1 text-right font-mono tabular shadow-none focus-visible:ring-1",
+                      readOnly && "bg-transparent text-muted-foreground",
+                      error && "border-destructive bg-destructive/10 text-destructive"
+                    )}
                   />
-                  {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+                  {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
                 </td>
               </tr>
             );

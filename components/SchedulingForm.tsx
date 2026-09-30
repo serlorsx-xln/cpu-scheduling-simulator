@@ -1,9 +1,17 @@
 "use client";
 
+import { Dices, Minus, Plus, RotateCcw } from "lucide-react";
+
 import ProcessTableInput from "./ProcessTableInput";
 import { ALGORITHM_META } from "./algorithm-styles";
 import type { AlgorithmName } from "@/lib/scheduling/types";
 import type { RawFormInput } from "@/lib/validation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 export type BtMode = "random" | "manual";
 export type AlgorithmFlags = RawFormInput["algorithms"];
@@ -33,16 +41,18 @@ const ALGORITHM_ORDER: { key: keyof AlgorithmFlags; name: AlgorithmName }[] = [
   { key: "rr", name: "RR" },
 ];
 
-function StepLabel({ no, children }: { no: string; children: string }) {
+function StepHeading({ no, title }: { no: string; title: string }) {
   return (
-    <p className="flex items-baseline gap-2 text-[11px] font-semibold tracking-[0.18em] text-slate-400 uppercase">
-      <span className="font-mono text-slate-300">{no}</span>
-      {children}
-    </p>
+    <div className="mb-3 flex items-center gap-2.5">
+      <span className="flex size-5 items-center justify-center rounded-[5px] bg-secondary font-mono text-[11px] font-medium text-secondary-foreground">
+        {no}
+      </span>
+      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+    </div>
   );
 }
 
-/** โซน A — ฟอร์มตั้งค่าการจำลอง (คอลัมน์ซ้าย แบบ sticky บนจอใหญ่) */
+/** แผงตั้งค่าการจำลอง (คอลัมน์ซ้าย sticky บนจอใหญ่) */
 export default function SchedulingForm(props: SchedulingFormProps) {
   const { algorithms } = props;
 
@@ -54,197 +64,249 @@ export default function SchedulingForm(props: SchedulingFormProps) {
 
   return (
     <form
+      noValidate
       onSubmit={(e) => {
         e.preventDefault();
         props.onSubmit();
       }}
-      className="space-y-6 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
       aria-label="ฟอร์มตั้งค่าการจำลอง"
     >
-      {/* 01 — จำนวนโปรเซส */}
-      <section>
-        <StepLabel no="01">จำนวนโปรเซส</StepLabel>
-        <div className="mt-2.5 flex items-center gap-2.5">
-          <input
-            id="process-count"
-            type="number"
-            min={1}
-            max={10}
-            value={props.processCount}
-            onChange={(e) =>
-              props.onProcessCountChange(e.target.value === "" ? "" : Number(e.target.value))
-            }
-            className={`w-20 rounded-lg border px-3 py-2 text-center font-mono tabular text-lg font-semibold transition ${
-              props.processCountError
-                ? "border-red-400 bg-red-50/60 ring-2 ring-red-100"
-                : "border-slate-200 focus:border-slate-400 focus:ring-2 focus:ring-slate-100 focus:outline-none"
-            }`}
-          />
-          <div className="flex gap-1.5">
-            {[3, 5, 10].map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => props.onProcessCountChange(n)}
-                className="rounded-full border border-slate-200 px-3 py-1 font-mono text-xs text-slate-500 transition hover:border-slate-400 hover:text-slate-800"
-              >
-                {n}
-              </button>
-            ))}
-          </div>
-        </div>
-        {props.processCountError && (
-          <p className="mt-1.5 text-xs text-red-600">{props.processCountError}</p>
-        )}
-      </section>
-
-      {/* 02 — Burst Time */}
-      <section>
-        <StepLabel no="02">Burst Time</StepLabel>
-        <div className="mt-2.5 flex items-center gap-2">
-          <div className="grid flex-1 grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">
-            {(
-              [
-                ["random", "สุ่มอัตโนมัติ"],
-                ["manual", "กรอกเอง"],
-              ] as const
-            ).map(([mode, label]) => (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => props.onBtModeChange(mode)}
-                className={`rounded-lg px-3 py-1.5 text-sm transition ${
-                  props.btMode === mode
-                    ? "bg-white font-semibold text-slate-900 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          {props.btMode === "random" && (
-            <button
-              type="button"
-              onClick={props.onReshuffle}
-              title="สุ่มค่า Burst Time ใหม่"
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-500 transition hover:border-slate-400 hover:text-slate-800"
-            >
-              ⟳
-            </button>
-          )}
-        </div>
-        <div className="mt-3">
-          <ProcessTableInput
-            burstTimes={props.burstTimes}
-            readOnly={props.btMode === "random"}
-            onChange={props.onBurstTimeChange}
-            errorFor={props.burstTimeError}
-          />
-        </div>
-      </section>
-
-      {/* 03 — อัลกอริทึม */}
-      <section>
-        <StepLabel no="03">อัลกอริทึม</StepLabel>
-        <div className="mt-2.5 space-y-2">
-          {ALGORITHM_ORDER.map(({ key, name }) => {
-            const meta = ALGORITHM_META[name];
-            const checked = algorithms[key];
-            return (
-              <label
-                key={key}
-                className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition ${
-                  checked
-                    ? `${meta.softBg} ring-2 ${meta.ring} border-transparent`
-                    : "border-slate-200 hover:border-slate-300"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  className="sr-only"
-                  checked={checked}
-                  onChange={(e) => props.onAlgorithmToggle(key, e.target.checked)}
+      <Card>
+        <CardContent className="space-y-6">
+          {/* 01 — จำนวนโปรเซส */}
+          <section>
+            <StepHeading no="1" title="จำนวนโปรเซส" />
+            <div className="flex items-center gap-2.5">
+              <div className="space-y-1.5">
+                <Label htmlFor="process-count" className="sr-only">
+                  จำนวนโปรเซส (1–10)
+                </Label>
+                <Input
+                  id="process-count"
+                  type="number"
+                  min={1}
+                  max={10}
+                  aria-label="จำนวนโปรเซส (1–10)"
+                  value={props.processCount}
+                  onChange={(e) =>
+                    props.onProcessCountChange(
+                      e.target.value === "" ? "" : Number(e.target.value)
+                    )
+                  }
+                  aria-invalid={Boolean(props.processCountError)}
+                  className="w-20 text-center font-mono tabular text-base font-semibold"
                 />
-                <span className={`size-3 rounded-full transition ${meta.dot} ${checked ? "" : "opacity-25"}`} />
-                <span className="flex-1">
-                  <span className="block text-sm font-semibold text-slate-800">{meta.label}</span>
-                  <span className="block text-xs text-slate-500">{meta.tagline}</span>
-                </span>
-                <span
-                  className={`font-mono text-xs transition ${
-                    checked ? "text-slate-700" : "text-slate-300"
-                  }`}
-                  aria-hidden
-                >
-                  {checked ? "✓" : "○"}
-                </span>
-              </label>
-            );
-          })}
-        </div>
-
-        {algorithms.rr && (
-          <div className="mt-3">
-            <label htmlFor="time-quantum" className="block text-xs text-slate-500">
-              Time Quantum
-            </label>
-            <div
-              className={`mt-1 inline-flex items-center overflow-hidden rounded-lg border ${
-                props.timeQuantumError
-                  ? "border-red-400 ring-2 ring-red-100"
-                  : "border-slate-200"
-              }`}
-            >
-              <button
-                type="button"
-                onClick={() => adjustQuantum(-1)}
-                aria-label="ลด Time Quantum"
-                className="px-3 py-1.5 font-mono text-slate-500 transition hover:bg-slate-50"
-              >
-                −
-              </button>
-              <input
-                id="time-quantum"
-                type="number"
-                min={1}
-                value={props.timeQuantum}
-                onChange={(e) => props.onTimeQuantumChange(e.target.value)}
-                className="w-14 border-x border-slate-200 px-2 py-1.5 text-center font-mono tabular font-semibold text-slate-800 focus:outline-none"
-              />
-              <button
-                type="button"
-                onClick={() => adjustQuantum(1)}
-                aria-label="เพิ่ม Time Quantum"
-                className="px-3 py-1.5 font-mono text-slate-500 transition hover:bg-slate-50"
-              >
-                +
-              </button>
+              </div>
+              <div className="flex gap-1.5 pt-0.5">
+                {[3, 5, 10].map((n) => (
+                  <Button
+                    key={n}
+                    type="button"
+                    variant={props.processCount === n ? "secondary" : "outline"}
+                    size="sm"
+                    onClick={() => props.onProcessCountChange(n)}
+                    className="font-mono"
+                  >
+                    {n}
+                  </Button>
+                ))}
+              </div>
             </div>
-            {props.timeQuantumError && (
-              <p className="mt-1.5 text-xs text-red-600">{props.timeQuantumError}</p>
+            {props.processCountError ? (
+              <p className="mt-2 text-xs text-destructive">{props.processCountError}</p>
+            ) : (
+              <p className="mt-2 text-xs text-muted-foreground">
+                ระบบสร้างแถว P1–P{n_display(props.processCount)} ให้อัตโนมัติ
+              </p>
             )}
-          </div>
-        )}
-      </section>
+          </section>
 
-      {/* actions */}
-      <section className="space-y-2 border-t border-slate-100 pt-5">
-        <button
-          type="button"
-          onClick={props.onSubmit}
-          className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 active:scale-[0.99]"
-        >
-          คำนวณผลลัพธ์
-        </button>
-        <button
-          type="button"
-          onClick={props.onReset}
-          className="w-full rounded-xl py-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
-        >
-          ล้างค่า
-        </button>
-      </section>
+          <Separator />
+
+          {/* 02 — Burst Time */}
+          <section>
+            <StepHeading no="2" title="Burst Time" />
+            <div className="mb-3 inline-flex rounded-lg bg-muted p-1">
+              {(
+                [
+                  ["random", "สุ่มอัตโนมัติ"],
+                  ["manual", "กรอกเอง"],
+                ] as const
+              ).map(([mode, label]) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => props.onBtModeChange(mode)}
+                  aria-pressed={props.btMode === mode}
+                  className={cn(
+                    "rounded-md px-3.5 py-1.5 text-sm transition-colors",
+                    props.btMode === mode
+                      ? "bg-background font-medium text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+              {props.btMode === "random" && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={props.onReshuffle}
+                  className="ml-1 gap-1.5"
+                  title="สุ่มค่า Burst Time ใหม่"
+                >
+                  <Dices className="size-3.5" aria-hidden />
+                  สุ่มใหม่
+                </Button>
+              )}
+            </div>
+            <ProcessTableInput
+              burstTimes={props.burstTimes}
+              readOnly={props.btMode === "random"}
+              onChange={props.onBurstTimeChange}
+              errorFor={props.burstTimeError}
+            />
+          </section>
+
+          <Separator />
+
+          {/* 03 — อัลกอริทึม */}
+          <section>
+            <StepHeading no="3" title="อัลกอริทึมที่ต้องการเปรียบเทียบ" />
+            <div className="space-y-2">
+              {ALGORITHM_ORDER.map(({ key, name }) => {
+                const meta = ALGORITHM_META[name];
+                const checked = algorithms[key];
+                const inputId = `algorithm-${key}`;
+                return (
+                  <div key={key}>
+                    <input
+                      id={inputId}
+                      type="checkbox"
+                      className="peer sr-only"
+                      checked={checked}
+                      onChange={(e) => props.onAlgorithmToggle(key, e.target.checked)}
+                    />
+                    <label
+                      htmlFor={inputId}
+                      className={cn(
+                        "flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors",
+                        "peer-focus-visible:ring-2 peer-focus-visible:ring-ring/50 peer-focus-visible:outline-none",
+                        checked
+                          ? `${meta.softBg} ${meta.border}`
+                          : "border-border hover:bg-secondary/50"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "size-2.5 shrink-0 rounded-[3px] transition-opacity",
+                          meta.dot,
+                          checked ? "opacity-100" : "opacity-25"
+                        )}
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-medium text-foreground">
+                          {meta.fullName}
+                          <span className="ml-1.5 font-mono text-xs text-muted-foreground">
+                            {meta.label}
+                          </span>
+                        </span>
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {meta.tagline}
+                        </span>
+                      </span>
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "font-mono text-xs",
+                          checked ? meta.text : "text-muted-foreground/40"
+                        )}
+                      >
+                        {checked ? "✓" : "+"}
+                      </span>
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
+
+            {algorithms.rr && (
+              <div className="mt-3 rounded-lg border bg-muted/40 p-3">
+                <Label
+                  htmlFor="time-quantum"
+                  className="text-xs text-muted-foreground"
+                >
+                  Time Quantum
+                </Label>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <div className="inline-flex items-center overflow-hidden rounded-lg border bg-background">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => adjustQuantum(-1)}
+                      aria-label="ลด Time Quantum"
+                      className="rounded-none border-r"
+                    >
+                      <Minus className="size-3.5" aria-hidden />
+                    </Button>
+                    <Input
+                      id="time-quantum"
+                      type="number"
+                      min={1}
+                      value={props.timeQuantum}
+                      onChange={(e) => props.onTimeQuantumChange(e.target.value)}
+                      aria-invalid={Boolean(props.timeQuantumError)}
+                      className="w-14 rounded-none border-0 text-center font-mono tabular font-semibold focus-visible:ring-0"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => adjustQuantum(1)}
+                      aria-label="เพิ่ม Time Quantum"
+                      className="rounded-none border-l"
+                    >
+                      <Plus className="size-3.5" aria-hidden />
+                    </Button>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    จำนวนหน่วยเวลาต่อรอบของแต่ละโปรเซส
+                  </span>
+                </div>
+                {props.timeQuantumError && (
+                  <p className="mt-2 text-xs text-destructive">{props.timeQuantumError}</p>
+                )}
+              </div>
+            )}
+          </section>
+
+          <Separator />
+
+          {/* actions */}
+          <section className="space-y-2">
+            <Button type="submit" className="w-full">
+              คำนวณผลลัพธ์
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={props.onReset}
+              className="w-full gap-1.5"
+            >
+              <RotateCcw className="size-3.5" aria-hidden />
+              ล้างค่า
+            </Button>
+          </section>
+        </CardContent>
+      </Card>
     </form>
   );
+}
+
+/** แสดง n ปลอดภัยเมื่อยังไม่กรอก */
+function n_display(n: number | ""): string {
+  return n === "" ? "n" : String(n);
 }
