@@ -1,0 +1,17 @@
+apiVersion: coolify/v1
+kind: Project
+metadata:
+  name: cpu-scheduling-simulator
+  displayName: CPU Scheduling Simulator
+spec:
+  runtime: docker
+  services:
+    - name: web
+      type: web
+      port: 3000
+      build:
+        dockerfile: Dockerfile
+      # โดเมนจริงผูกหลังสร้างด้วย bind_application_domain (cpuscheduling-simulator.synverge.dev)
+      env:
+        NODE_ENV: production
+        NEXT_TELEMETRY_DISABLED: "1"
