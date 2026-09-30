@@ -87,7 +87,8 @@ function CursorBand({ cursor, total }: { cursor: number | null; total: number })
  * - เคอร์เซอร์เวลา (pointer หรือ ←/→) ใช้ร่วมกับทุกอัลกอริทึมผ่าน TimelineProvider
  */
 export default function ScheduleTimeline({ result }: { result: SimulationResult }) {
-  const { focus, setHover, togglePin, cursor, setCursor, total } = useTimeline();
+  const { focus, setHover, togglePin, cursor, held, setHeld, setHoverCursor, pause, total } =
+    useTimeline();
   const [plotRef, plotWidth] = useElementWidth<HTMLDivElement>();
   const meta = ALGORITHM_META[result.algorithm];
   const { gantt, processes } = result;
@@ -105,23 +106,25 @@ export default function ScheduleTimeline({ result }: { result: SimulationResult 
     if (!rect || rect.width === 0) return;
     const x = (e.clientX - rect.left) / rect.width;
     if (x < 0 || x >= 1) {
-      setCursor(null);
+      setHoverCursor(null);
       return;
     }
-    setCursor(Math.min(total - 1, Math.max(0, Math.floor(x * total))));
+    setHoverCursor(Math.min(total - 1, Math.max(0, Math.floor(x * total))));
   }
 
+  // ปุ่มลูกศรเลื่อน "เวลาที่ถือไว้" ร่วมกับตัวเล่น — ทุกอัลกอริทึมตามไปด้วย
   function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     const step = e.shiftKey ? Math.max(1, Math.round(total / 10)) : 1;
     let next: number | null | undefined;
-    if (e.key === "ArrowRight") next = cursor === null ? 0 : Math.min(total - 1, cursor + step);
-    else if (e.key === "ArrowLeft") next = cursor === null ? total - 1 : Math.max(0, cursor - step);
+    if (e.key === "ArrowRight") next = held === null ? 0 : held + step;
+    else if (e.key === "ArrowLeft") next = held === null ? total - 1 : held - step;
     else if (e.key === "Home") next = 0;
     else if (e.key === "End") next = total - 1;
     else if (e.key === "Escape") next = null;
     if (next === undefined) return;
     e.preventDefault();
-    setCursor(next);
+    pause();
+    setHeld(next);
   }
 
   const readoutId = `timeline-readout-${result.algorithm}`;
@@ -170,11 +173,19 @@ export default function ScheduleTimeline({ result }: { result: SimulationResult 
         aria-describedby={readoutId}
         onKeyDown={onKeyDown}
         onPointerMove={cursorFromPointer}
+        onPointerDown={(e) => {
+          const rect = plotRef.current?.getBoundingClientRect();
+          if (!rect || rect.width === 0) return;
+          const x = (e.clientX - rect.left) / rect.width;
+          if (x >= 0 && x < 1) {
+            pause();
+            setHeld(Math.floor(x * total));
+          }
+        }}
         onPointerLeave={() => {
-          setCursor(null);
+          setHoverCursor(null);
           setHover(null);
         }}
-        onBlur={() => setCursor(null)}
         className="-mx-2 rounded-lg px-2 py-1 outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
       >
         {/* แถว CPU — Gantt แบบตำราเรียน */}

@@ -6,6 +6,8 @@ import { RefreshCw } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
 import ComparisonSummary from "@/components/ComparisonSummary";
 import ErrorSummary from "@/components/ErrorSummary";
+import PlaybackBar from "@/components/PlaybackBar";
+import QuantumSweep from "@/components/QuantumSweep";
 import ResultCard from "@/components/ResultCard";
 import ResultsPlaceholder from "@/components/ResultsPlaceholder";
 import SchedulingForm, {
@@ -76,6 +78,7 @@ export default function Home() {
   const [runId, setRunId] = useState(0);
   const [isMac, setIsMac] = useState(false);
   const [panelButtonVisible, setPanelButtonVisible] = useState(true);
+  const [presenting, setPresenting] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
 
   /* eslint-disable react-hooks/set-state-in-effect --
@@ -100,7 +103,7 @@ export default function Home() {
 
   const raw: RawFormInput = { processCount, burstTimes, timeQuantum, algorithms };
 
-  function calculate(input: RawFormInput) {
+  function calculate(input: RawFormInput, { scroll = true }: { scroll?: boolean } = {}) {
     const issues = validateInput(input);
     if (issues.length > 0) {
       setErrors(issues);
@@ -127,7 +130,7 @@ export default function Home() {
     setRunId((id) => id + 1);
 
     // จอเล็ก ผลลัพธ์อยู่ใต้ฟอร์ม → เลื่อนลงไปให้เห็น; จอใหญ่เห็นอยู่แล้ว
-    if (window.matchMedia("(max-width: 1023px)").matches) {
+    if (scroll && window.matchMedia("(max-width: 1023px)").matches) {
       requestAnimationFrame(() =>
         resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
       );
@@ -147,6 +150,30 @@ export default function Home() {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  function handlePickQuantum(q: number) {
+    setTimeQuantum(String(q));
+    calculate({ ...raw, timeQuantum: String(q) }, { scroll: false });
+  }
+
+  // โหมดนำเสนอ: ขยายสเกลตัวอักษรทั้งหน้า (ทุกขนาดเป็น rem) + เต็มจอถ้าเบราว์เซอร์อนุญาต
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.fontSize = presenting ? "18px" : "";
+    if (presenting && !document.fullscreenElement) {
+      root.requestFullscreen?.().catch(() => {});
+    } else if (!presenting && document.fullscreenElement) {
+      document.exitFullscreen?.().catch(() => {});
+    }
+  }, [presenting]);
+  useEffect(() => {
+    // กด Esc ออกจากเต็มจอ = ออกจากโหมดนำเสนอด้วย
+    const onChange = () => {
+      if (!document.fullscreenElement) setPresenting(false);
+    };
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
   }, []);
 
   function handleProcessCountChange(value: number | "") {
@@ -203,14 +230,32 @@ export default function Home() {
 
   const isStale = results !== null && computedFrom !== fingerprint(raw);
   const total = results?.[0]?.gantt.at(-1)?.end ?? 0;
+  const rrResult = results?.find((r) => r.algorithm === "RR") ?? null;
   const bestAvg = results && results.length > 1 ? Math.min(...results.map((r) => r.avgWaitingTime)) : null;
 
   return (
     <div className="min-h-svh pb-24 lg:pb-0">
-      <AppHeader onLoadSample={handleLoadSample} isMac={isMac} />
+      <AppHeader
+        onLoadSample={handleLoadSample}
+        isMac={isMac}
+        presenting={presenting}
+        onTogglePresent={() => setPresenting((v) => !v)}
+        onPrint={() => window.print()}
+        canPrint={results !== null}
+      />
 
-      <main className="mx-auto grid max-w-[1400px] items-start gap-6 px-4 py-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:px-6 lg:py-8">
-        <aside className="lg:sticky lg:top-[5.5rem] lg:flex lg:max-h-[calc(100svh-7rem)] lg:flex-col">
+      <main
+        className={cn(
+          "mx-auto grid max-w-[1400px] items-start gap-6 px-4 py-6 lg:px-6 lg:py-8 print:block print:max-w-none print:p-0",
+          presenting && results ? "max-w-[1200px]" : "lg:grid-cols-[360px_minmax(0,1fr)]"
+        )}
+      >
+        <aside
+          className={cn(
+            "lg:sticky lg:top-[5.5rem] lg:flex lg:max-h-[calc(100svh-7rem)] lg:flex-col print:hidden",
+            presenting && results && "hidden lg:hidden"
+          )}
+        >
           <SchedulingForm
             processCount={processCount}
             onProcessCountChange={handleProcessCountChange}
@@ -252,6 +297,11 @@ export default function Home() {
                     รวม {total} หน่วยเวลา
                   </p>
                 </div>
+                {presenting && (
+                  <Button type="button" size="sm" variant="outline" onClick={() => setPresenting(false)} className="print:hidden">
+                    แก้ค่าที่ป้อน
+                  </Button>
+                )}
                 {isStale && (
                   <div
                     role="status"
@@ -266,7 +316,17 @@ export default function Home() {
                 )}
               </div>
 
+              <PlaybackBar />
+
               <ComparisonSummary results={results} />
+
+              {rrResult && (
+                <QuantumSweep
+                  burstTimes={rrResult.processes.map((p) => p.burstTime)}
+                  currentQuantum={rrResult.timeQuantum ?? 1}
+                  onPickQuantum={handlePickQuantum}
+                />
+              )}
 
               {results.map((result, i) => (
                 <ResultCard
@@ -295,7 +355,7 @@ export default function Home() {
         aria-hidden={panelButtonVisible}
         inert={panelButtonVisible}
         className={cn(
-          "fixed inset-x-0 bottom-0 z-30 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] transition-transform duration-200 ease-out lg:hidden",
+          "fixed inset-x-0 bottom-0 z-30 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] transition-transform duration-200 ease-out lg:hidden print:hidden",
           panelButtonVisible && "translate-y-full"
         )}
       >

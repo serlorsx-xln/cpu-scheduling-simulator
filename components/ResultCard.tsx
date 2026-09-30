@@ -1,6 +1,13 @@
+"use client";
+
+import { useMemo } from "react";
+
 import { ALGORITHM_META } from "./algorithm-styles";
+import QueueView from "./QueueView";
+import StepTrace from "./StepTrace";
 import ResultTable from "./ResultTable";
 import ScheduleTimeline from "./ScheduleTimeline";
+import { traceSchedule } from "@/lib/scheduling/trace";
 import type { SimulationResult } from "@/lib/scheduling/types";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -18,6 +25,15 @@ export default function ResultCard({
   isBest?: boolean
 }) {
   const meta = ALGORITHM_META[result.algorithm];
+  const steps = useMemo(
+    () =>
+      traceSchedule(
+        result.algorithm,
+        result.processes.map((p) => p.burstTime),
+        result.timeQuantum ?? 1
+      ),
+    [result]
+  );
   const headingId = `result-${result.algorithm}`;
 
   return (
@@ -27,7 +43,7 @@ export default function ResultCard({
       style={{ animationDelay: `${index * 60}ms` }}
       id={`algo-${result.algorithm}`}
     >
-      <Card className="gap-0 py-0">
+      <Card className="gap-0 py-0 print:break-inside-avoid-page">
         <CardHeader className="gap-0 border-b px-5 py-4 sm:px-6">
           <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
             <div className="min-w-0">
@@ -68,11 +84,13 @@ export default function ResultCard({
 
         <CardContent className="space-y-6 px-5 py-5 sm:px-6">
           <ScheduleTimeline result={result} />
+          <QueueView result={result} steps={steps} />
           <ResultTable
             processes={result.processes}
             avgWaitingTime={result.avgWaitingTime}
             avgTurnaroundTime={result.avgTurnaroundTime}
           />
+          <StepTrace result={result} steps={steps} />
         </CardContent>
       </Card>
     </section>

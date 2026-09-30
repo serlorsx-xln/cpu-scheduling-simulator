@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-30T14:27:59+00:00",
+  "generatedAt": "2026-09-30T14:49:50+00:00",
   "title": "Design System: CPU Scheduling Simulator",
   "extensions": {
     "colorMeta": {
@@ -267,6 +267,22 @@
       "axis": {
         "displayName": "Axis",
         "purpose": "Geist Mono 11px axis ticks and the time flag."
+      },
+      "app-title": {
+        "displayName": "App Title",
+        "purpose": "15px bold product name in the app bar only."
+      },
+      "table-dense": {
+        "displayName": "Dense Table",
+        "purpose": "13px step table at every width; result table below sm."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "11px queue-chip sub-lines and Quantum Sweep line-end labels; digits in mono."
+      },
+      "segment-compact": {
+        "displayName": "Compact Segment",
+        "purpose": "10px bold Gantt labels on segments narrower than 30px; the smallest size in the system."
       }
     },
     "shadows": [
@@ -308,9 +324,29 @@
         "purpose": "The single left-to-right clip wipe on timeline plots after calculating."
       },
       {
+        "name": "flip",
+        "value": "320ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Queue chips sliding between CPU, queue and done slots as time advances."
+      },
+      {
+        "name": "chip-enter",
+        "value": "200ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Queue chip first appearance: scale 0.92 and opacity 0 to rest."
+      },
+      {
+        "name": "chevron",
+        "value": "200ms",
+        "purpose": "Step-table disclosure chevron rotation."
+      },
+      {
+        "name": "playback",
+        "value": "0.5x / 1x / 2x / 4x",
+        "purpose": "Shared cursor advance rate; only after the user presses play."
+      },
+      {
         "name": "reduced-motion",
         "value": "0.01ms",
-        "purpose": "All animation and transition collapsed under prefers-reduced-motion."
+        "purpose": "All animation and transition collapsed under prefers-reduced-motion; the FLIP hook skips entirely. Print disables all animation."
       }
     ],
     "breakpoints": [
@@ -330,7 +366,48 @@
         "name": "container",
         "value": "1400px"
       }
-    ]
+    ],
+    "print": {
+      "purpose": "Light token set under @media print in app/globals.css; the only light rendering.",
+      "tokens": {
+        "background": "#ffffff",
+        "foreground": "#111114",
+        "card": "#ffffff",
+        "muted": "#f3f3f5",
+        "muted-foreground": "#4a4a52",
+        "subtle": "#5c5c66",
+        "surface-2": "#f3f3f5",
+        "surface-3": "#e6e6ea",
+        "accent": "#ececf0",
+        "border": "rgb(0 0 0 / 0.14)",
+        "hairline": "rgb(0 0 0 / 0.08)",
+        "segment": "#dcdce2",
+        "segment-ink": "#111114",
+        "primary": "#111114",
+        "primary-foreground": "#ffffff"
+      },
+      "rootFontSize": "13px",
+      "pageMargin": "14mm",
+      "hidden": [
+        "app bar",
+        "settings rail",
+        "playback toolbar",
+        "queue views",
+        "mobile bottom bar"
+      ],
+      "expanded": [
+        "step tables"
+      ]
+    },
+    "presentation": {
+      "rootFontSize": "18px",
+      "fullscreen": true,
+      "container": "1200px single column",
+      "hidden": [
+        "settings rail (when results exist)",
+        "shortcut hint"
+      ]
+    }
   },
   "components": [
     {
@@ -404,6 +481,38 @@
       "description": "Process | BT | ST | CT | TAT | WT in mono tabular; CT/WT in ink, focused row on accent surface.",
       "html": "<table class=\"ds-table\"><thead><tr><th>Process</th><th>BT</th><th>ST</th><th>CT</th><th>TAT</th><th class=\"ds-wt\">WT</th></tr></thead><tbody><tr><td>P1</td><td>5</td><td>0</td><td class=\"ds-ink\">5</td><td>5</td><td class=\"ds-wt\">0</td></tr><tr class=\"ds-focus\"><td>P2</td><td>3</td><td>5</td><td class=\"ds-ink\">8</td><td>8</td><td class=\"ds-wt\">5</td></tr></tbody></table>",
       "css": ".ds-table{border-collapse:separate;border-spacing:0;border:1px solid rgb(255 255 255/.08);border-radius:8px;overflow:hidden;min-width:420px;font-size:14px;color:#9d9da6}.ds-table th{height:36px;padding:0 8px;background:#1a1b1f;text-align:right;font-size:12px;font-weight:700;font-family:var(--font-thai,'LINE Seed Sans TH'),ui-sans-serif,sans-serif}.ds-table th:first-child,.ds-table td:first-child{text-align:left;padding-left:16px}.ds-table td{padding:8px;text-align:right;border-top:1px solid rgb(255 255 255/.08);font-family:var(--font-geist-mono,'Geist Mono'),ui-monospace,monospace;font-variant-numeric:tabular-nums;transition:background-color .15s}.ds-table td:first-child{font-family:var(--font-thai,'LINE Seed Sans TH'),ui-sans-serif,sans-serif;font-weight:700;color:#ededef}.ds-table tbody tr{cursor:pointer}.ds-table tbody tr:hover{background:#1a1b1f}.ds-table .ds-focus,.ds-table .ds-focus:hover{background:#232429}.ds-ink{color:#ededef}.ds-wt{color:#ededef;font-weight:600}"
+    },
+    {
+      "name": "Playback Toolbar",
+      "kind": "custom",
+      "refersTo": "playback-toolbar",
+      "description": "Sticky transport for the shared time cursor: primary play, ghost step buttons, playhead slider, mono readout, joined speed toggle.",
+      "html": "<div class=\"ds-pb\" role=\"toolbar\" aria-label=\"Playback\"><button class=\"ds-pb-ico ds-pb-play\" aria-label=\"Play\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><polygon points=\"6 3 20 12 6 21 6 3\"/></svg></button><button class=\"ds-pb-ico ds-pb-ghost\" aria-label=\"Step back\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><polygon points=\"19 20 9 12 19 4 19 20\"/><line x1=\"5\" x2=\"5\" y1=\"19\" y2=\"5\"/></svg></button><button class=\"ds-pb-ico ds-pb-ghost\" aria-label=\"Step forward\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><polygon points=\"5 4 15 12 5 20 5 4\"/><line x1=\"19\" x2=\"19\" y1=\"5\" y2=\"19\"/></svg></button><div class=\"ds-pb-slider\"><span class=\"ds-pb-track\"><span class=\"ds-pb-range\" style=\"width:42%\"></span></span><button class=\"ds-pb-thumb\" style=\"left:42%\" aria-label=\"Time\"></button></div><p class=\"ds-pb-read\"><span class=\"ds-pb-num ds-pb-ink\">5–6</span> / <span class=\"ds-pb-num\">12</span></p><div class=\"ds-pb-speed\"><button>0.5×</button><button aria-pressed=\"true\">1×</button><button>2×</button><button>4×</button></div></div>",
+      "css": ".ds-pb{display:flex;align-items:center;gap:16px;padding:10px 16px;border:1px solid rgb(255 255 255/.08);border-radius:10px;background:#131417;font-family:var(--font-thai,'LINE Seed Sans TH'),ui-sans-serif,sans-serif;max-width:720px}.ds-pb-ico{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid transparent;border-radius:8px;cursor:pointer;transition:background-color 150ms,opacity 150ms}.ds-pb-play{background:#ededef;color:#0c0d0f}.ds-pb-play:hover{opacity:.8}.ds-pb-ghost{background:transparent;color:#9d9da6;margin-left:-12px}.ds-pb-ghost:hover{background:#1a1b1f;color:#ededef}.ds-pb-ico:focus-visible{outline:none;border-color:rgb(237 237 239/.45);box-shadow:0 0 0 3px rgb(237 237 239/.225)}.ds-pb-slider{position:relative;flex:1;height:16px;display:flex;align-items:center}.ds-pb-track{position:relative;display:block;width:100%;height:4px;border-radius:2px;background:#232429;overflow:hidden}.ds-pb-range{position:absolute;inset:0 auto 0 0;background:#ededef}.ds-pb-thumb{position:absolute;top:0;width:6px;height:16px;margin-left:-3px;padding:0;border:0;border-radius:2px;background:#ededef;cursor:pointer;transition:box-shadow 150ms}.ds-pb-thumb:hover,.ds-pb-thumb:focus-visible{outline:none;box-shadow:0 0 0 3px rgb(237 237 239/.225)}.ds-pb-read{margin:0;width:88px;text-align:right;font-size:12px;color:#9d9da6}.ds-pb-num{font-family:var(--font-geist-mono,'Geist Mono'),ui-monospace,monospace;font-variant-numeric:tabular-nums}.ds-pb-ink{color:#ededef}.ds-pb-speed{display:inline-flex}.ds-pb-speed button{width:40px;height:28px;border:1px solid rgb(255 255 255/.12);background:transparent;color:#ededef;font-size:12px;cursor:pointer;font-family:var(--font-thai,'LINE Seed Sans TH'),ui-sans-serif,sans-serif}.ds-pb-speed button+button{border-left:0}.ds-pb-speed button:first-child{border-radius:6px 0 0 6px}.ds-pb-speed button:last-child{border-radius:0 6px 6px 0}.ds-pb-speed button:hover{background:#1a1b1f}.ds-pb-speed button[aria-pressed=true]{background:#1a1b1f}"
+    },
+    {
+      "name": "Queue View",
+      "kind": "chip",
+      "refersTo": "queue-chip",
+      "description": "Scheduler state at the current time unit: CPU chip filled with the algorithm hue (the Filled-Chip Exception), waiting chips on surface-3, done chips transparent; focused chip lifts to near-white.",
+      "html": "<section class=\"ds-qv\"><div class=\"ds-qv-head\">State at <span class=\"ds-qv-num\">5–6</span></div><div class=\"ds-qv-body\"><div><p class=\"ds-qv-lbl\">CPU</p><span class=\"ds-chip ds-chip-cpu\"><b>P2</b><small>left <span class=\"ds-qv-num\">1</span>/<span class=\"ds-qv-num\">3</span></small><i class=\"ds-bar\"><i style=\"width:66%\"></i></i></span></div><div><p class=\"ds-qv-lbl\">Ready queue</p><span class=\"ds-chip\"><b>P3</b><small>left <span class=\"ds-qv-num\">4</span>/<span class=\"ds-qv-num\">4</span></small><i class=\"ds-bar\"><i style=\"width:0\"></i></i></span> <span class=\"ds-arrow\">→</span> <span class=\"ds-chip ds-chip-focus\"><b>P4</b><small>left <span class=\"ds-qv-num\">1</span>/<span class=\"ds-qv-num\">2</span></small><i class=\"ds-bar\"><i style=\"width:50%\"></i></i></span></div><div><p class=\"ds-qv-lbl\">Done</p><span class=\"ds-chip ds-chip-done\"><b>P1</b><small>CT <span class=\"ds-qv-num\">2</span></small></span></div></div></section>",
+      "css": ".ds-qv{max-width:560px;border:1px solid rgb(255 255 255/.08);border-radius:8px;background:#1a1b1f;color:#ededef;font-family:var(--font-thai,'LINE Seed Sans TH'),ui-sans-serif,sans-serif}.ds-qv-head{padding:10px 16px;border-bottom:1px solid rgb(255 255 255/.06);font-size:14px;font-weight:700}.ds-qv-body{display:flex;gap:24px;padding:16px}.ds-qv-lbl{margin:0 0 8px;font-size:12px;color:#9d9da6}.ds-qv-num{font-family:var(--font-geist-mono,'Geist Mono'),ui-monospace,monospace;font-variant-numeric:tabular-nums}.ds-arrow{color:#868690;font-size:12px}.ds-chip{position:relative;display:inline-flex;flex-direction:column;justify-content:center;height:36px;min-width:52px;padding:0 10px;overflow:hidden;border:1px solid rgb(255 255 255/.08);border-radius:6px;background:#232429;color:#ededef;vertical-align:middle;transition:background-color 150ms,color 150ms}.ds-chip b{font-size:14px;line-height:1}.ds-chip small{margin-top:4px;font-size:11px;line-height:1;color:#9d9da6}.ds-chip-cpu{background:#d95926;border-color:transparent;color:#0c0d0f}.ds-chip-cpu small,.ds-chip-focus small{color:#0c0d0f}.ds-chip-focus{background:#ededef;border-color:transparent;color:#0c0d0f}.ds-chip-done{background:transparent;border-color:rgb(255 255 255/.06);color:#9d9da6}.ds-bar{position:absolute;left:0;right:0;bottom:0;height:2px;background:rgb(237 237 239/.1)}.ds-bar i{display:block;height:100%;background:rgb(237 237 239/.45)}.ds-chip-cpu .ds-bar,.ds-chip-focus .ds-bar{background:rgb(12 13 15/.25)}.ds-chip-cpu .ds-bar i,.ds-chip-focus .ds-bar i{background:rgb(12 13 15/.7)}.ds-chip:not(.ds-chip-cpu):not(.ds-chip-focus):hover{background:#2c2d33}"
+    },
+    {
+      "name": "Step Table",
+      "kind": "custom",
+      "refersTo": "step-row-current",
+      "description": "Collapsible hand-calculation table at 13px; current-time row on surface-2 with a filled play marker, focused-process row on the accent surface.",
+      "html": "<div class=\"ds-st\"><button class=\"ds-st-trig\" aria-expanded=\"true\"><span><b>Step by step</b><small><span class=\"ds-st-num\">4</span> steps</small></span><svg class=\"ds-st-chev\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m6 9 6 6 6-6\"/></svg></button><table><thead><tr><th>Step</th><th>Time</th><th>Queue</th><th>Choice · reason</th><th>Left</th></tr></thead><tbody><tr><td class=\"ds-st-num\">&nbsp;&nbsp;&nbsp;1</td><td class=\"ds-st-num\">0–2</td><td class=\"ds-st-m\">P1 P2 P3</td><td><b>P1</b><span class=\"ds-st-m\"> · first in queue</span></td><td class=\"ds-st-num ds-st-m\">2 → 0</td></tr><tr class=\"ds-st-cur\"><td class=\"ds-st-num\"><svg class=\"ds-st-mark\" width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><polygon points=\"6 3 20 12 6 21 6 3\"/></svg> 2</td><td class=\"ds-st-num\">2–4</td><td class=\"ds-st-m\">P2 P3</td><td><b>P2</b><span class=\"ds-st-m\"> · next in queue</span></td><td class=\"ds-st-num ds-st-m\">3 → 1</td></tr><tr class=\"ds-st-focus\"><td class=\"ds-st-num\">&nbsp;&nbsp;&nbsp;3</td><td class=\"ds-st-num\">4–6</td><td class=\"ds-st-m\">P3 P2</td><td><b>P3</b><span class=\"ds-st-m\"> · next in queue</span></td><td class=\"ds-st-num ds-st-m\">4 → 2</td></tr></tbody></table></div>",
+      "css": ".ds-st{max-width:640px;border:1px solid rgb(255 255 255/.08);border-radius:8px;color:#ededef;font-family:var(--font-thai,'LINE Seed Sans TH'),ui-sans-serif,sans-serif;overflow:hidden}.ds-st-trig{display:flex;width:100%;justify-content:space-between;align-items:center;padding:12px 16px;border:0;border-bottom:1px solid rgb(255 255 255/.08);background:transparent;color:#ededef;text-align:left;cursor:pointer;font-family:var(--font-thai,'LINE Seed Sans TH'),ui-sans-serif,sans-serif;transition:background-color 150ms}.ds-st-trig:hover{background:#1a1b1f}.ds-st-trig:focus-visible{outline:none;box-shadow:inset 0 0 0 2px rgb(237 237 239/.225)}.ds-st-trig b{display:block;font-size:14px}.ds-st-trig small{display:block;margin-top:2px;font-size:12px;color:#9d9da6}.ds-st-chev{color:#9d9da6;transform:rotate(180deg)}.ds-st table{width:100%;border-collapse:collapse;font-size:13px}.ds-st th{height:36px;padding:0 8px;background:#1a1b1f;color:#9d9da6;font-size:12px;font-weight:700;text-align:left}.ds-st td{padding:8px;border-top:1px solid rgb(255 255 255/.08)}.ds-st tbody tr{cursor:pointer;transition:background-color 150ms}.ds-st tbody tr:hover,.ds-st-cur{background:#1a1b1f}.ds-st-focus,.ds-st-focus:hover{background:#232429!important}.ds-st-num{font-family:var(--font-geist-mono,'Geist Mono'),ui-monospace,monospace;font-variant-numeric:tabular-nums}.ds-st-m{color:#9d9da6}.ds-st-mark{vertical-align:-1px}"
+    },
+    {
+      "name": "Quantum Sweep",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "RR AVG WT by time quantum: 2px RR line, r=4 dots ringed in card colour, current q filled near-white, FCFS/SJF 2px reference lines at 80% with labels in a 76px right gutter, one y-axis from 0.",
+      "html": "<svg class=\"ds-qs\" width=\"520\" height=\"200\" viewBox=\"0 0 520 200\" role=\"img\" aria-label=\"Quantum sweep\"><g class=\"ds-qs-grid\"><line x1=\"38\" x2=\"444\" y1=\"166\" y2=\"166\" class=\"ds-qs-base\"/><line x1=\"38\" x2=\"444\" y1=\"116\" y2=\"116\"/><line x1=\"38\" x2=\"444\" y1=\"66\" y2=\"66\"/><line x1=\"38\" x2=\"444\" y1=\"16\" y2=\"16\"/></g><g class=\"ds-qs-tick\"><text x=\"30\" y=\"170\">0</text><text x=\"30\" y=\"120\">2</text><text x=\"30\" y=\"70\">4</text><text x=\"30\" y=\"20\">6</text><text x=\"38\" y=\"186\">1</text><text x=\"173\" y=\"186\">2</text><text x=\"309\" y=\"186\" class=\"ds-qs-cur\">3</text><text x=\"444\" y=\"186\">4</text></g><line x1=\"38\" x2=\"444\" y1=\"58\" y2=\"58\" stroke=\"#3987e5\" stroke-width=\"2\" stroke-linecap=\"round\" opacity=\".8\"/><line x1=\"38\" x2=\"444\" y1=\"96\" y2=\"96\" stroke=\"#199e70\" stroke-width=\"2\" stroke-linecap=\"round\" opacity=\".8\"/><path d=\"M38,36 L173,76 L309,66 L444,58\" fill=\"none\" stroke=\"#d95926\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"38\" cy=\"36\" r=\"4\" fill=\"#d95926\" stroke=\"#131417\" stroke-width=\"2\"/><circle cx=\"173\" cy=\"76\" r=\"4\" fill=\"#d95926\" stroke=\"#131417\" stroke-width=\"2\"/><circle cx=\"309\" cy=\"66\" r=\"6\" fill=\"#ededef\" stroke=\"#131417\" stroke-width=\"2\"/><circle cx=\"444\" cy=\"58\" r=\"4\" fill=\"#d95926\" stroke=\"#131417\" stroke-width=\"2\"/><text x=\"452\" y=\"62\" class=\"ds-qs-lab\">FCFS 4.33</text><text x=\"452\" y=\"100\" class=\"ds-qs-lab\">SJF 2.80</text></svg>",
+      "css": ".ds-qs{display:block;background:#131417;border-radius:10px}.ds-qs-grid line{stroke:rgb(255 255 255/.06);stroke-width:1}.ds-qs-grid .ds-qs-base{stroke:rgb(255 255 255/.08)}.ds-qs-tick text{font-family:var(--font-geist-mono,'Geist Mono'),ui-monospace,monospace;font-size:11px;fill:#868690;font-variant-numeric:tabular-nums}.ds-qs-tick text[x='30']{text-anchor:end}.ds-qs-tick text:not([x='30']){text-anchor:middle}.ds-qs-tick .ds-qs-cur{fill:#ededef}.ds-qs-lab{font-family:var(--font-thai,'LINE Seed Sans TH'),ui-sans-serif,sans-serif;font-size:11px;fill:#9d9da6}"
     }
   ],
   "narrative": {
@@ -413,7 +522,7 @@
       "Dark only. Three neutral ground steps with depth from hairlines.",
       "Colour is data. The three algorithm hues appear only on marks.",
       "Emphasis, not palette: processes are neutral until one is focused.",
-      "One shared time cursor and process focus run across every chart and table.",
+      "One shared time cursor and process focus run across every chart and table; time state and process focus are drawn in separate channels.",
       "Two type weights (400/700). Mono is used only for aligned numerals.",
       "Radii of 6–10px on containers and 2–5px on data marks, with no pills."
     ],
@@ -424,13 +533,18 @@
         "section": "colors"
       },
       {
+        "name": "The Filled-Chip Exception",
+        "body": "The CPU chip in the queue view is a data mark: it fills with the running algorithm's hue and carries Page Black text (dark-on-hue 5.01:1 on RR orange, 5.34:1 on FCFS blue, 5.71:1 on SJF aqua). It is the only component where a series hue sits behind text. Any new case must be a data mark that meets 4.5:1 dark-on-hue, never a control.",
+        "section": "colors"
+      },
+      {
         "name": "The Red-Means-Error Rule",
         "body": "Error Red appears only when input is invalid. It is never a primary, brand or delete-style accent.",
         "section": "colors"
       },
       {
         "name": "The Emphasis-Not-Palette Rule",
-        "body": "Processes (up to 10) never get a cycling categorical palette. In the Gantt they are neutral segments, and the focused process lifts to Near-White Ink. Its lane, table row and comparison row move to the accent surface or ink, and every non-focused lane or row dims to 45% opacity.",
+        "body": "Processes (up to 10) never get a cycling categorical palette. In the Gantt they are neutral segments, and the focused process lifts to Near-White Ink. Its lane, table row and comparison row move to the accent surface or ink, and every non-focused lane or row dims to 45% opacity. A focused queue chip lifts to Near-White with Page Black text, the same as the Gantt segment.",
         "section": "colors"
       },
       {
@@ -455,7 +569,12 @@
       },
       {
         "name": "The One-Wipe Rule",
-        "body": "The only entrance flourish is the timeline reveal after calculating. Nothing loops, pulses or animates while idle.",
+        "body": "The only entrance flourish is the timeline reveal after calculating. Other motion answers a change in time state. Nothing loops, pulses or animates while idle.",
+        "section": "components"
+      },
+      {
+        "name": "The Two-Channels Rule",
+        "body": "Time state and process focus never share a treatment. The current time is a band, a Raised Surface row, or a filled play marker. The focused process is Near-White or the Accent Surface.",
         "section": "components"
       }
     ],
@@ -466,12 +585,13 @@
       "**Do** set column and axis digits in Geist Mono with tabular numbers, and everything else in LINE Seed 400/700.",
       "**Do** separate with hairlines (6–8% white) and one-step surface changes.",
       "**Do** keep text contrast at or above Subtle Ink (5.1:1 on card).",
-      "**Do** start every bar chart at zero, and round only the value end."
+      "**Do** start every bar chart at zero, and round only the value end. Line charts use one y-axis from 0.",
+      "**Do** keep the current-time highlight (Raised Surface plus the play marker) separate from process focus (the Accent Surface or Near-White)."
     ],
     "donts": [
       "**Don't** use pill or fully rounded shapes. Badges are 5px, and containers cap at 10px.",
       "**Don't** give processes a cycling categorical palette.",
-      "**Don't** colour text, borders or control grounds with FCFS blue, SJF aqua or RR orange.",
+      "**Don't** colour text, borders or control grounds with FCFS blue, SJF aqua or RR orange. The CPU chip is the only filled data mark that carries text, and its text is Page Black.",
       "**Don't** use Error Red for anything other than validation errors.",
       "**Don't** add drop shadows, decorative gradients or glass blur.",
       "**Don't** use emoji as UI, or a terminal or console aesthetic.",

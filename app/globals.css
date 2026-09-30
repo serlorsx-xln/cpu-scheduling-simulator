@@ -185,6 +185,45 @@
   font-variant-numeric: tabular-nums;
 }
 
+@media print {
+  :root,
+  .dark {
+    color-scheme: light;
+    --background: #ffffff;
+    --foreground: #111114;
+    --card: #ffffff;
+    --card-foreground: #111114;
+    --muted: #f3f3f5;
+    --muted-foreground: #4a4a52;
+    --subtle: #5c5c66;
+    --surface-2: #f3f3f5;
+    --surface-3: #e6e6ea;
+    --accent: #ececf0;
+    --border: rgb(0 0 0 / 0.14);
+    --hairline: rgb(0 0 0 / 0.08);
+    --segment: #dcdce2;
+    --segment-ink: #111114;
+    --primary: #111114;
+    --primary-foreground: #ffffff;
+  }
+  @page {
+    margin: 14mm;
+  }
+  html {
+    font-size: 13px;
+  }
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

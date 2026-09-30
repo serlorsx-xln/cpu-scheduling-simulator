@@ -63,6 +63,25 @@ typography:
     fontWeight: 400
     lineHeight: 1
     fontFeature: "\"tnum\" 1"
+  app-title:
+    fontFamily: "LINE Seed Sans TH, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "15px"
+    fontWeight: 700
+  table-dense:
+    fontFamily: "LINE Seed Sans TH, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "13px"
+    fontWeight: 400
+  caption:
+    fontFamily: "LINE Seed Sans TH, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "11px"
+    fontWeight: 400
+    lineHeight: 1
+  segment-compact:
+    fontFamily: "LINE Seed Sans TH, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "10px"
+    fontWeight: 700
+    lineHeight: 1
+    letterSpacing: "-0.02em"
 rounded:
   mark-xs: "2px"
   mark-sm: "3px"
@@ -147,6 +166,77 @@ components:
     textColor: "{colors.error-red}"
     rounded: "{rounded.xl}"
     padding: "16px 20px"
+  playback-toolbar:
+    backgroundColor: "{colors.card-graphite}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.xl}"
+    padding: "10px 16px"
+  button-icon-primary:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.page-black}"
+    rounded: "{rounded.lg}"
+    size: "32px"
+  button-icon-ghost:
+    textColor: "{colors.ink-muted}"
+    rounded: "{rounded.lg}"
+    size: "32px"
+  slider-track:
+    backgroundColor: "{colors.surface-accent}"
+    rounded: "{rounded.mark-xs}"
+    height: "4px"
+  slider-range:
+    backgroundColor: "{colors.ink}"
+    height: "4px"
+  slider-thumb:
+    backgroundColor: "{colors.ink}"
+    rounded: "{rounded.mark-xs}"
+    width: "6px"
+    height: "16px"
+  queue-panel:
+    backgroundColor: "{colors.surface-raised}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.lg}"
+  queue-chip:
+    backgroundColor: "{colors.surface-accent}"
+    textColor: "{colors.ink}"
+    typography: "{typography.section}"
+    rounded: "{rounded.md}"
+    height: "36px"
+    padding: "0 10px"
+  queue-chip-done:
+    textColor: "{colors.ink-muted}"
+    typography: "{typography.section}"
+    rounded: "{rounded.md}"
+    height: "36px"
+    padding: "0 10px"
+  queue-chip-focus:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.page-black}"
+    rounded: "{rounded.md}"
+    height: "36px"
+  queue-chip-cpu-fcfs:
+    backgroundColor: "{colors.fcfs-blue}"
+    textColor: "{colors.page-black}"
+    rounded: "{rounded.md}"
+    height: "36px"
+  queue-chip-cpu-sjf:
+    backgroundColor: "{colors.sjf-aqua}"
+    textColor: "{colors.page-black}"
+    rounded: "{rounded.md}"
+    height: "36px"
+  queue-chip-cpu-rr:
+    backgroundColor: "{colors.rr-orange}"
+    textColor: "{colors.page-black}"
+    rounded: "{rounded.md}"
+    height: "36px"
+  step-row-current:
+    backgroundColor: "{colors.surface-raised}"
+    textColor: "{colors.ink}"
+    typography: "{typography.table-dense}"
+  step-row-focus:
+    backgroundColor: "{colors.surface-accent}"
+    textColor: "{colors.ink}"
+    typography: "{typography.table-dense}"
 ---
 
 # Design System: CPU Scheduling Simulator
@@ -165,7 +255,7 @@ Confirmed rejections: no terminal or console look, no pill shapes, no emoji used
 - Dark only. Three neutral ground steps with depth from hairlines.
 - Colour is data. The three algorithm hues appear only on marks.
 - Emphasis, not palette: processes are neutral until one is focused.
-- One shared time cursor and process focus run across every chart and table.
+- One shared time cursor and process focus run across every chart and table; time state and process focus are drawn in separate channels.
 - Two type weights (400/700). Mono is used only for aligned numerals.
 - Radii of 6–10px on containers and 2–5px on data marks, with no pills.
 
@@ -181,14 +271,14 @@ The palette is neutral graphite with three validated data hues. The interface ha
 - **SJF Aqua** (sjf-aqua): the series colour for Shortest Job First.
 - **RR Orange** (rr-orange): the series colour for Round Robin.
 
-The three hues were validated as a set (all pairs plus colour-vision-deficiency simulation) on the card-graphite surface. They fill run bars, the comparison bars, the 8–10px legend squares next to algorithm names, and the per-process WT bars. They never colour text, borders or backgrounds of controls.
+The three hues were validated as a set (all pairs plus colour-vision-deficiency simulation) on the card-graphite surface. They fill run bars, the comparison bars, the 8–10px legend squares next to algorithm names, and the per-process WT bars. They also draw the Quantum Sweep lines and dots, and fill the CPU chip in the queue view (the one data mark that carries text; see the Filled-Chip Exception below). They never colour text, borders or backgrounds of controls.
 
 ### Neutral
 - **Page Black** (page-black): the page ground, the sticky app bar and the mobile bottom bar. It is also the `theme-color`.
 - **Card Graphite** (card-graphite): all cards. Contrast is measured against this surface.
-- **Raised Surface** (surface-raised): the table header, read-only input wells, the stale-results notice, and hover rows. It also serves as the popover and muted ground.
+- **Raised Surface** (surface-raised): the table header, read-only input wells, the stale-results notice, and hover rows. It also serves as the popover and muted ground, the queue-view panel, and the current-time row in the step table.
 - **Secondary Surface** (surface-secondary): secondary buttons.
-- **Accent Surface** (surface-accent): focused or pinned table rows, the focused per-process comparison row, and the Gantt segment hover state.
+- **Accent Surface** (surface-accent): focused or pinned table rows (result table and step table), the focused per-process comparison row, the Gantt segment hover state, waiting queue chips, and the playback slider track.
 - **Neutral Segment** (segment-neutral) with **Segment Ink** (segment-ink): Gantt CPU segments at rest, 9.5:1.
 - **Muted Ink** (ink-muted): secondary copy, table values other than CT and WT, and labels. 6.9:1 on card.
 - **Subtle Ink** (ink-subtle): axis ticks, `·` separators, algorithm short codes and footer notes. 5.1:1 on card. Do not go lower.
@@ -198,9 +288,14 @@ The three hues were validated as a set (all pairs plus colour-vision-deficiency 
 ### Named Rules
 **The Color-Is-Data Rule.** Blue, aqua and orange mean FCFS, SJF and RR, and nothing else. Text always uses an ink token, even next to a series mark.
 
+**The Filled-Chip Exception.** The CPU chip in the queue view is a data mark: it fills with the running algorithm's hue and carries Page Black text (dark-on-hue 5.01:1 on RR orange, 5.34:1 on FCFS blue, 5.71:1 on SJF aqua). It is the only component where a series hue sits behind text. Any new case must be a data mark that meets 4.5:1 dark-on-hue, never a control.
+
 **The Red-Means-Error Rule.** Error Red appears only when input is invalid. It is never a primary, brand or delete-style accent.
 
-**The Emphasis-Not-Palette Rule.** Processes (up to 10) never get a cycling categorical palette. In the Gantt they are neutral segments, and the focused process lifts to Near-White Ink. Its lane, table row and comparison row move to the accent surface or ink, and every non-focused lane or row dims to 45% opacity.
+**The Emphasis-Not-Palette Rule.** Processes (up to 10) never get a cycling categorical palette. In the Gantt they are neutral segments, and the focused process lifts to Near-White Ink. Its lane, table row and comparison row move to the accent surface or ink, and every non-focused lane or row dims to 45% opacity. A focused queue chip lifts to Near-White with Page Black text, the same as the Gantt segment.
+
+### Print
+Print swaps to a light token set under `@media print`: white ground and card, near-black ink (#111114, 18.9:1), muted ink #4a4a52, subtle ink #5c5c66, light grey surfaces (#f3f3f5 / #e6e6ea / accent #ececf0), black hairlines at 8–14%, and #dcdce2 segments. The three data hues stay unchanged, and colour printing is forced exact. This is the only light rendering; the screen stays dark only.
 
 ## Typography
 
@@ -216,7 +311,15 @@ The three hues were validated as a set (all pairs plus colour-vision-deficiency 
 - **Section** (700, 0.875rem): form section headings, chart titles, and the primary button label.
 - **Body** (400, 0.875rem): descriptions, the rule line under each algorithm, and table cells (13px below `sm`). Placeholder prose is capped at 58ch.
 - **Label** (400, 0.75rem): hints, legends, `dt` labels (AVG WT, AVG TAT), the cursor readout, and row labels P1…Pn. Always sentence case, never tracked uppercase.
-- **Numeral / Axis** (Geist Mono with tabular-nums, 14px in tables and 11px on axes): table bodies, axis ticks, stepper values, formula operands, and the time flag.
+- **Numeral / Axis** (Geist Mono with tabular-nums, 14px in tables and 11px on axes): table bodies, axis ticks (Gantt, comparison and Quantum Sweep), stepper values, formula operands, and the time flag.
+
+Four intentional off-ramp steps sit between these roles:
+- **App Title** (700, 15px): the product name in the app bar only.
+- **Dense Table** (400, 13px): the step table at every width, and the result table below `sm`.
+- **Caption** (400, 11px): queue-chip sub-lines ("remaining n/BT", "CT n") and Quantum Sweep line-end labels, with digits in mono.
+- **Compact Segment** (700, 10px, −0.02em): Gantt segment labels when a segment is narrower than 30px. Nothing is set smaller.
+
+Presentation mode sets the root to 18px, so the whole rem ramp scales up together; print sets it to 13px.
 
 ### Named Rules
 **The Aligned-Numerals Rule.** Geist Mono is used only for digits that sit in a column or on an axis. Words, headings and standalone big figures stay in LINE Seed. In formulas, only the numbers are mono and the operators stay sans.
@@ -229,6 +332,10 @@ The page is a centred 1400px container with 16px gutters (24px at `lg`). At `lg`
 
 The spacing rhythm is a 4px base. Cards use 20px horizontal padding (24px at `sm`) with 16–20px vertical padding, form sections use 20px, and stacked sections are 24px apart. Timeline rows share one grid template: a 36px label gutter, the plot, and a 52px value gutter (a 28px gutter and no value column below `sm`). Plot areas therefore align pixel for pixel across the CPU row, the axis and every process lane. The Burst Time list moves to two columns once there are 6 or more processes.
 
+The playback toolbar sticks directly under the 56px app bar (top 3.5rem) at the head of the results column. It sits on a Page Black band with 12px of top padding, so cards scrolling beneath never show through above it. Inside each result card, the queue view and the collapsible step table follow the timeline. The Quantum Sweep chart is a full-width card below the results, with a 232px plot, a 38px left axis gutter and a 76px right gutter for reference-line labels.
+
+**Presentation mode** enters fullscreen, raises the root font size to 18px, hides the settings rail and the shortcut hint once results exist, and narrows the container to 1200px in a single column. **Print** hides the app bar, settings, playback toolbar, queue views and mobile bar. It expands every step table, drops the container width and padding, keeps result cards from breaking across pages, and uses a 14mm page margin.
+
 ## Elevation & Depth
 
 The system is flat and uses tonal layering. Depth comes from three ground steps (page → card → raised or accent) plus 1px hairline strokes. Cards carry a 10% foreground ring instead of a shadow. Overlays (tooltips) invert to a Near-White ground rather than lifting on a shadow.
@@ -238,7 +345,7 @@ The system is flat and uses tonal layering. Depth comes from three ground steps 
 
 ## Shapes
 
-Corners are gently squared. Containers use 10px (cards, error summary), controls use 8px (buttons, inputs, steppers, table frame) and 6px for small buttons and toggles, and badges use 5px. Data marks are tighter: 4px for Gantt segments and the time scrubber band, 3px for run bars, legend squares and the time flag, and 2px for wait bars and legend chips. Horizontal bars round only on their value end (`rounded-r`) and stay square at the zero baseline. The app mark is a 24px rounded square that holds a three-row mini Gantt.
+Corners are gently squared. Containers use 10px (cards, error summary), controls use 8px (buttons, inputs, steppers, table frame) and 6px for small buttons and toggles, and badges use 5px. Data marks are tighter: 4px for Gantt segments and the time scrubber band, 3px for run bars, legend squares and the time flag, and 2px for wait bars and legend chips. Horizontal bars round only on their value end (`rounded-r`) and stay square at the zero baseline. The app mark is a 24px rounded square that holds a three-row mini Gantt. Queue chips use 6px and the playback toolbar 10px. The playback slider is a 4px track at 2px radius with a 6×16px Near-White playhead bar (2px radius), which is a playhead rather than a round knob.
 
 ### Named Rules
 **The No-Pill Rule.** Nothing is fully rounded. Badges are 5px, and no container goes past 10px.
@@ -252,12 +359,14 @@ Quiet and exact.
 - **Outline:** a 12% input stroke over a 30% input tint, used for secondary entry points (the SET-A loader, trying the sample).
 - **Secondary:** the Secondary Surface fill, used for the inline "recalculate" in the stale-results notice.
 - **Ghost:** muted ink with no fill, used for Reset and Reshuffle.
-- **Focus:** a 3px ring at 50% of the focus-ring colour, with a matching border.
+- **Icon:** 32px square. Playback uses one primary icon button (play, pause, or restart at the end) and ghost icon buttons in muted ink for stepping back and forward. Each has a tooltip and an aria-label.
+- **Focus:** a 3px ring at 50% of the focus-ring colour, with a matching border. Large composite regions (the step-table trigger and the Quantum Sweep plot) use a 2px ring at 50%.
 
 ### Chips / Toggles
 - **Preset toggle group** (3 · 5 · 10): an outline group joined with no gap, with mono digits. The selected item fills with the muted surface.
 - **Badge:** 5px radius, 20px high, and the outline variant for metadata such as `q = 2`.
 - **Kbd:** 20px keys on the muted surface in the app-bar shortcut hint.
+- **Speed toggle** (0.5× · 1× · 2× · 4×): the same joined outline group, 28px high with 40px items, shown at `sm` and wider. Below `sm` it collapses to one 28px outline button that cycles through the speeds.
 
 ### Cards / Containers
 - **Corner Style:** 10px.
@@ -283,6 +392,33 @@ A textbook Gantt that doubles as a scrubbable instrument.
 - **Shared cursor:** pointer or arrow keys select one time unit. That unit is drawn as a band with an 80% ink border over 8% ink in every row of every algorithm, with a Near-White mono time flag on the axis and a polite live readout ("P2 using the CPU · waiting P1, P3 · done P4").
 - **Focus:** hovering or clicking a process in any chart or table focuses it everywhere, following the Emphasis-Not-Palette Rule.
 
+### Playback Toolbar
+A transport bar for the shared time cursor.
+- **Container:** Card Graphite with a border, 10px radius, and 8×8px padding (10×16px at `sm`), in a role="toolbar".
+- **Order:** transport buttons, then a flexible slider with a right-aligned readout (mono `t–t+1 / total` in 12px), then speed.
+- **Slider:** a 4px Accent Surface track, a Near-White range, and the playhead thumb. Its hit area extends 12px sideways and 8px vertically. Hover and focus add a 3px ring at 50%. Dragging pauses playback.
+
+### Queue View
+The scheduler's state at the current time unit, inside each result card.
+- **Panel:** Raised Surface with a border and 8px radius. A header row (bold 14px "state at t–t+1", a done count, and a polite live line explaining the choice) sits above three slots: CPU, the ready queue (chips joined by subtle arrows), and done.
+- **Chips:** 36px high, at least 52px wide, 6px radius, with a bold 14px `Pn` over an 11px caption. Waiting chips sit on the Accent Surface with a border. Done chips are transparent with a hairline, muted ink and a check. The CPU chip follows the Filled-Chip Exception. A focused waiting or done chip lifts to Near-White; a focused CPU chip keeps its hue (it is the data mark) and shows focus as a 2px Near-White ring with a 2px offset on the panel surface.
+- **Progress strip:** 2px along the chip's bottom edge, showing CPU time used (a 45% ink fill on a 10% track, or a 70% Page Black fill on a 25% track on filled chips).
+- **Motion:** chips move between slots with FLIP (320ms, cubic-bezier(0.16, 1, 0.3, 1)) and enter at 92% scale with a fade (200ms). Both are off under reduced motion.
+
+### Step Table
+The hand-calculation table, one per result card, collapsed by default.
+- **Trigger:** a full-width 8px bordered row with a bold title, a 12px step count, and a chevron that rotates over 200ms. Hover moves to the Raised Surface.
+- **Table:** 13px text. The header is on the Raised Surface with bold 12px muted labels at 36px. Columns are step, time, queue before choice, choice · reason, remaining (`before → after`), and outcome. Digits are mono.
+- **Rows:** clicking or pressing Enter on a row moves the shared cursor to that step. The focused-process row uses the Accent Surface (as in the result table). The current-time row uses the Raised Surface plus a small filled play marker before the step number.
+- **Mounting:** content is always mounted and hidden with CSS when closed, so print can force it open.
+
+### Quantum Sweep
+An SVG line chart of RR AVG WT against q = 1…max BT (capped at 100), compared with the other algorithms.
+- **Series:** a 2px RR orange line with round joins. Every q gets an r=4 dot with a 2px Card Graphite ring. The hovered or current q grows to r=6, and the current q fills Near-White.
+- **References:** FCFS and SJF are 2px horizontal lines at 80% opacity, labelled in 11px muted ink in the 76px right gutter. The labels are dropped when they would collide, and the legend still names both.
+- **Axes:** a single y-axis from 0 on a nice 0.5–100 step scale, hairline gridlines with a border-weight baseline, and 11px mono ticks in Subtle Ink (the current q tick is in ink). A 1px 40% ink cursor line follows the pointer.
+- **Interaction:** pointer or arrow keys preview a q, and clicking or pressing Enter recalculates with it. A screen-reader table lists every point.
+
 ### Result Table
 The assignment grammar is Process | BT | ST | CT | TAT | WT, inside a bordered 8px frame. The header sits on the Raised Surface with dotted-underline abbreviations that carry tooltips. The body is mono tabular. CT and WT are in ink, WT is semibold, and the other columns are muted. The footer shows averages, then a formula line (`AVG WT = ΣWT ÷ n = …`).
 
@@ -290,9 +426,11 @@ The assignment grammar is Process | BT | ST | CT | TAT | WT, inside a bordered 8
 Shown when two or more algorithms are selected. On the left, AVG WT bars start at zero and are ranked by value. The best bar is at full opacity and the others at 70%, and the best value is marked with a check icon and a text label. On the right is a per-process WT chart on a shared 3–5 step "nice" axis, with 6% hairline gridlines and values placed at bar ends. A one-sentence insight is always computed from the real numbers.
 
 ### Motion
-State transitions (colour, opacity, background) take 150ms, and the bottom bar slides in 200ms. Result cards rise 6px over 240ms, staggered by 60ms. The timeline plots get one left-to-right clip wipe (520ms, cubic-bezier(0.16, 1, 0.3, 1)) after each calculation. All motion collapses under `prefers-reduced-motion`.
+State transitions (colour, opacity, background) take 150ms, and the bottom bar slides in 200ms. Result cards rise 6px over 240ms, staggered by 60ms. The timeline plots get one left-to-right clip wipe (520ms, cubic-bezier(0.16, 1, 0.3, 1)) after each calculation. Queue chips FLIP between slots over 320ms and enter over 200ms (same curve), and the step-table chevron rotates over 200ms. Playback advances the shared cursor at 0.5–4× only after the user presses play. All motion collapses under `prefers-reduced-motion` (the FLIP hook checks it directly), and print disables all animation and transition.
 
-**The One-Wipe Rule.** The only entrance flourish is the timeline reveal after calculating. Nothing loops, pulses or animates while idle.
+**The One-Wipe Rule.** The only entrance flourish is the timeline reveal after calculating. Other motion answers a change in time state. Nothing loops, pulses or animates while idle.
+
+**The Two-Channels Rule.** Time state and process focus never share a treatment. The current time is a band, a Raised Surface row, or a filled play marker. The focused process is Near-White or the Accent Surface.
 
 ## Do's and Don'ts
 
@@ -303,12 +441,13 @@ State transitions (colour, opacity, background) take 150ms, and the bottom bar s
 - **Do** set column and axis digits in Geist Mono with tabular numbers, and everything else in LINE Seed 400/700.
 - **Do** separate with hairlines (6–8% white) and one-step surface changes.
 - **Do** keep text contrast at or above Subtle Ink (5.1:1 on card).
-- **Do** start every bar chart at zero, and round only the value end.
+- **Do** start every bar chart at zero, and round only the value end. Line charts use one y-axis from 0.
+- **Do** keep the current-time highlight (Raised Surface plus the play marker) separate from process focus (the Accent Surface or Near-White).
 
 ### Don't:
 - **Don't** use pill or fully rounded shapes. Badges are 5px, and containers cap at 10px.
 - **Don't** give processes a cycling categorical palette.
-- **Don't** colour text, borders or control grounds with FCFS blue, SJF aqua or RR orange.
+- **Don't** colour text, borders or control grounds with FCFS blue, SJF aqua or RR orange. The CPU chip is the only filled data mark that carries text, and its text is Page Black.
 - **Don't** use Error Red for anything other than validation errors.
 - **Don't** add drop shadows, decorative gradients or glass blur.
 - **Don't** use emoji as UI, or a terminal or console aesthetic.
