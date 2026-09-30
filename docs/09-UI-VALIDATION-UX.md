@@ -20,21 +20,22 @@
 - มี error = ผลลัพธ์เดิมถูกล้าง ไม่แสดงผลจากข้อมูลที่ผิด
 - **ไม่ใช้ `alert()`**
 
-## 9.2 Design System (ธีม Dispatch Console)
+## 9.2 Design System (ธีม shadcn/ui premium dark)
 
 | ส่วน | ค่า |
 |---|---|
-| ฟอนต์ UI | IBM Plex Sans Thai (next/font, subsets thai+latin, 300–700) ผ่าน `--font-sans` |
-| ฟอนต์ตัวเลข/ป้ายกำกับ | IBM Plex Mono ผ่าน `--font-mono` + `tabular` (font-variant-numeric) ในตาราง/AVG/q/หัวข้อสเต็ป |
-| พื้นหลังหน้า | `console-950` (#0a0e14) + กริดวิศวกรรมโปร่ง 36px (`globals.css`) |
-| แผง/การ์ด | `rounded-lg border border-white/10 bg-console-900` — ไม่มี shadow, ความลึกมาจากเส้น hairline และพื้นสองระดับ |
-| ปุ่มหลัก | พื้น amber-400 ตัวอักษร console-950 mono uppercase, hover amber-300, active translate-y-px |
-| สีสัญญาณ | amber ใช้กับ action หลักและค่าสำคัญสุด (WT/AVG WT) เท่านั้น; rose สงวนให้ error |
-| สีอัลกอริทึม | ศูนย์กลางที่ `components/algorithm-styles.ts`: FCFS sky, SJF emerald, RR amber (dot/bar/softBg/ring/text/border) — ใช้ร่วมทั้งฟอร์ม การ์ด แผงเปรียบเทียบ |
-| สีโปรเซสใน Gantt | palette 8 สีโทน 400 วนตาม id (`processBarColor`) ตัวอักษรบนแท่งเป็นสีเข้ม |
-| Animation | `animate-fade-up` (fade + translateY 8px, 0.4s) ใช้กับ ErrorSummary / แผงเปรียบเทียบ / การ์ดผลลัพธ์ (ไล่ delay 70ms ต่อใบ) |
-| Responsive | grid `lg:grid-cols-[380px_1fr]`, ฟอร์ม sticky บน lg, ตารางหุ้ม `overflow-x-auto` |
-| Spinner input เลข | ซ่อน (`appearance: textfield`) — กรอก/stepper เท่านั้น ให้ประสบการณ์เป็นเครื่องมือ |
+| UI framework | **shadcn/ui 100%** (style radix-nova): Card, Button, Input, Label, Table, Badge, Separator, Tabs, Checkbox, Tooltip |
+| ฟอนต์ UI | **LINE Seed Sans TH** self-host woff2 (SIL OFL 1.1) ผ่าน `next/font/local` — Regular 400 / Bold 700 |
+| ฟอนต์ตัวเลข | IBM Plex Mono (next/font/google) + `tabular` (font-variant-numeric) ในตาราง/AVG/q/legend |
+| สีทั้งหมด | shadcn design tokens (oklch): `--background` oklch(0.145 0.005 286), `--card` oklch(0.185...), `--border` ขาว 10% — ความลึกจาก border + พื้น 3 ระดับ ไม่มี glow/gradient ประดับ |
+| ปุ่มหลัก | shadcn Button default (`--primary` oklch(0.922 0 0) พื้นสว่าง ตัวอักษรเข้ม) |
+| รูปทรง | คมแบบแม่นยำ: จุดสี `rounded-[3px]`, แท่ง `rounded-sm`, ไม่มี pill `rounded-full` ใน UI |
+| สีอัลกอริทึม | ศูนย์กลางที่ `components/algorithm-styles.ts`: FCFS sky, SJF emerald, RR amber (dot/bar/softBg/ring/text/border) — ใช้ร่วมทั้งฟอร์ม การ์ด แผงเปรียบเทียบ legend |
+| สีโปรเซสใน Gantt | palette 8 สีโทน 400 วนตาม id (`processBarColor`) ตัวอักษรบนแท่งเป็น `text-primary-foreground` |
+| Animation | `animate-fade-up` (fade + translateY 8px, 0.4s) ไล่ delay 70ms ต่อการ์ด — ปิดทั้งหมดเมื่อ `prefers-reduced-motion: reduce` |
+| Responsive | grid `lg:grid-cols-[400px_minmax(0,1fr)]`, ฟอร์ม sticky `top-8` + `max-h-[calc(100svh-4rem)] overflow-y-auto`, ตารางหุ้ม `overflow-x-auto` ในตัว shadcn Table |
+| Spinner input เลข | ซ่อน (`appearance: textfield`) — กรอกเอง/ใช้ stepper หรือปุ่มลัด |
+| Metadata | openGraph + viewport themeColor ใน `app/layout.tsx` |
 
 ## 9.3 Accessibility และ UX
 

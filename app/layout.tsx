@@ -5,11 +5,11 @@ import { IBM_Plex_Mono } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
-/** LINE Seed Sans TH (SIL OFL 1.1) — self-host เป็น woff2, Regular ครอบ 300–400, Bold ครอบ 500–700 */
+/** LINE Seed Sans TH (SIL OFL 1.1) — self-host เป็น woff2 ไฟล์ static (ไม่มี variable axes) จึงประกาศ weight ตรงตัว */
 const thai = localFont({
   src: [
-    { path: "./fonts/LINESeedSansTH-Regular.woff2", weight: "300 400", style: "normal" },
-    { path: "./fonts/LINESeedSansTH-Bold.woff2", weight: "500 700", style: "normal" },
+    { path: "./fonts/LINESeedSansTH-Regular.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/LINESeedSansTH-Bold.woff2", weight: "700", style: "normal" },
   ],
   variable: "--font-thai",
   display: "swap",
@@ -27,6 +27,18 @@ export const metadata: Metadata = {
   title: "CPU Scheduling Simulator",
   description:
     "จำลองและเปรียบเทียบอัลกอริทึม CPU Scheduling: FCFS, SJF (Non-preemptive), Round Robin",
+  openGraph: {
+    title: "CPU Scheduling Simulator",
+    description:
+      "จำลองและเปรียบเทียบอัลกอริทึม CPU Scheduling: FCFS, SJF (Non-preemptive), Round Robin",
+    type: "website",
+    locale: "th_TH",
+  },
+};
+
+export const viewport = {
+  themeColor: "#1a1a1e",
+  colorScheme: "dark" as const,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

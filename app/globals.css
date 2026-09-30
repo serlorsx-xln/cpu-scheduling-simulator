@@ -164,6 +164,18 @@ input[type="number"] {
   animation: fade-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
 @utility tabular {
   font-variant-numeric: tabular-nums;
 }

@@ -1,73 +1,72 @@
-# 8. UI Layout และพฤติกรรมหน้าจอ (ธีม Dispatch Console)
+# 8. UI Layout และพฤติกรรมหน้าจอ (ธีม shadcn/ui premium dark)
 
 > ข้อความ error / styling / a11y อยู่ที่ [09-UI-VALIDATION-UX](09-UI-VALIDATION-UX.md) · กฎ validation ที่ [02-REQUIREMENTS §2.5](02-REQUIREMENTS.md)
 
 ## 8.1 แนวคิดการออกแบบ
 
-ธีม **"Dispatch Console"** — แรงบันดาลใจจากแผงควบคุมเครื่องจักร/instrument panel ระดับ premium:
+ธีม **premium dark** บน shadcn/ui (style radix-nova) ทั้งระบบ — สะอาด อ่านง่าย เหมือน production จริง ไม่ใช่ console/glassmorphism:
 
-- พื้นหลังดำอมน้ำเงิน (`--color-console-950: #0a0e14`) + **กริดวิศวกรรมโปร่ง ๆ** 36px ตลอดหน้า
-- ตัวเลขทุกตัวใช้ **IBM Plex Mono + tabular-nums** — สัญญาณประจำ "engineering aesthetic"
-- สีมีวินัย: สัญญาณหลักคือ **amber** (ปุ่ม action, ค่าที่สำคัญสุด WT/AVG WT) ส่วน sky/emerald/amber เป็นรหัสประจำอัลกอริทึม FCFS/SJF/RR
-- **ไม่มี gradient เน้นแพด, ไม่มี glassmorphism, ไม่มี shadow ลอย ๆ** — ความลึกมาจากเส้นแบ่ง hairline (`border-white/10`) และพื้นสองระดับ (950/900)
-- มุมโค้งน้อย (`rounded-md`/`rounded-sm`) ให้ความรู้สึกแม่นยำแบบเครื่องมือ ไม่ใช่ app ทั่วไป
+- สีทั้งหมดผ่าน **design tokens ของ shadcn** (oklch): พื้น `--background` neutral อุ่น oklch(0.145 0.005 286) การ์ด `--card` สว่างกว่าพื้นหนึ่งระดับ ความลึกมาจาก border hairline (`--border` ขาว 10%) และพื้น 3 ระดับ ไม่ใช้ glow/gradient ประดับ
+- **shadcn/ui 100%**: Card, Button, Input, Label, Table, Badge, Separator, Tabs, Checkbox, Tooltip — ไม่มี UI primitive ที่เขียนเองนอก data-viz
+- ฟอนต์: **LINE Seed Sans TH** (self-host woff2, SIL OFL 1.1, ผ่าน `next/font/local`) สำหรับข้อความไทย/อังกฤษ + **IBM Plex Mono** สำหรับตัวเลขทุกตัว (`tabular-nums`)
+- รูปทรงคมแบบแม่นยำ: จุดสี `rounded-[3px]`, แท่ง bar `rounded-sm`, ไม่มี pill `rounded-full` ใน UI
+- สีอัลกอริทึม: FCFS sky / SJF emerald / RR amber (แหล่งเดียวที่ `components/algorithm-styles.ts`) ใช้ร่วมทั้งฟอร์ม การ์ด แผงเปรียบเทียบ legend
+- `prefers-reduced-motion` ปิด animation ทั้งหมด
 
 ## 8.2 ภาพรวม Layout
 
-หน้าเดียวแบบ dashboard 2 คอลัมน์ (container กว้างสุด ~1280px):
+หน้าเดียวแบบ dashboard 2 คอลัมน์ (container `max-w-6xl`):
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ CPU SCHEDULING SIMULATOR        (eyebrow mono tracking-widest)│
-│ เปรียบเทียบอัลกอริทึมจัดคิว CPU    (h1 3xl bold)              │
-│ FCFS · SJF · ROUND ROBIN — ARRIVAL TIME = 0    ● READY QUEUE │
+│ [Badge: Operating Systems · Term Project]                    │
+│ จำลองการจัดคิวงานของ CPU (h1 3xl/4xl bold)                    │
+│ คำอธิบาย + ป้าย "ทุกโปรเซสมี Arrival Time = 0"                │
 ├───────────────┬──────────────────────────────────────────────┤
 │ คอลัมน์ซ้าย    │ คอลัมน์ขวา (ผลลัพธ์)                          │
-│ (380px sticky │ ┌ ⚠ ErrorSummary (เมื่อ validation ไม่ผ่าน) ┐  │
-│  บนจอ ≥ lg)   │ ┌ แผงเปรียบเทียบ AVG WT (≥2 อัลกอริทึม) ──┐  │
-│ ┌ แผงควบคุม:  │ │  FCFS    ████████░░░░ 4.33             │  │
-│ │ 01 จำนวน   │ │  SJF     ██████░░░░░░ 3.67 [ต่ำสุด]     │  │
-│ │ 02 BT      │ │  RR q=2  █████████████ 7.00            │  │
-│ │ 03 อัลกอริทึม│ └────────────────────────────────────────┘  │
-│ │ + quantum  │ ┌ การ์ดผลลัพธ์ FCFS (fade-up ไล่ delay) ───┐  │
-│ │ ▸ คำนวณ    │ │ ตาราง · AVG WT/TAT · Gantt + สเกลเวลา  │  │
-│ │ ล้างค่า     │ └────────────────────────────────────────┘  │
-│ └───────────┘ ┌ การ์ด SJF ┐ ┌ การ์ด Round Robin (q=2) ──┐   │
+│ (400px sticky │ ┌ ⚠ ErrorSummary (เมื่อ validation ไม่ผ่าน) ┐  │
+│  top-8        │ ┌ แผงเปรียบเทียบ AVG WT (≥2 อัลกอริทึม) ──┐  │
+│  overflow-y   │ │  FCFS  ████████░░ 4.33                  │  │
+│  -auto)       │ │  SJF   ██████░░░ 3.67 [ต่ำสุด]          │  │
+│ ┌ Card ฟอร์ม: │ │  RR    █████████ 7.00 (q=2)            │  │
+│ │ ① จำนวน    │ └────────────────────────────────────────┘  │
+│ │ ② BT       │ ┌ การ์ดผลลัพธ์ FCFS (fade-up ไล่ delay) ────┐  │
+│ │ ③ อัลกอริทึม│ │ ตาราง · AVG WT/TAT · Gantt + legend    │  │
+│ │ + quantum  │ └────────────────────────────────────────┘  │
+│ │ คำนวณ/ล้าง  │ ┌ การ์ด SJF ┐ ┌ การ์ด RR (q=2) ┐            │
+│ └───────────┘ │ (ยังไม่คำนวณ → ghost preview placeholder)   │
 ├───────────────┴──────────────────────────────────────────────┤
-│ TERM PROJECT — CPU SCHEDULING SIMULATOR      FCFS / SJF / RR │
+│ footer: CPU Scheduling Simulator — Operating Systems          │
 └──────────────────────────────────────────────────────────────┘
 ```
 
-- จอ ≥ lg: ฟอร์มอยู่ซ้ายแบบ `lg:sticky lg:top-6` เลื่อนดูผลลัพธ์ได้โดยฟอร์มไม่หลุด
+- จอ ≥ lg: ฟอร์มซ้าย `sticky top-8` + `max-h-[calc(100svh-4rem)] overflow-y-auto` (ฟอร์มยาวกรณี 10 โปรเซสเลื่อนภายในได้ ไม่ทะลุจอ)
 - จอเล็ก: คอลัมน์ซ้อนกัน (ฟอร์มบน ผลลัพธ์ล่าง)
-- ยังไม่คำนวณ: คอลัมน์ขวาแสดง empty state (กรอบเส้นประ + แถบ gantt จาง ๆ จำลอง + คำแนะนำ)
+- ยังไม่คำนวณ: คอลัมน์ขวาเป็น **ghost preview** — แผงเปรียบเทียบ + ตาราง (แท่งแทนตัวเลข) + Gantt จำลอง ที่ opacity ต่ำ `aria-hidden` + sr-only คำอธิบายจริง
 
-## 8.3 พฤติกรรมฟอร์ม (แผงเดียว 3 สเต็ป)
+## 8.3 พฤติกรรมฟอร์ม (Card เดียว 3 สเต็ป)
 
-หัวข้อแต่ละสเต็ปอ่านเหมือนแผ่นงานวิศวกรรม: เลขลำดับ amber + เส้นขีดยาว + ชื่อหัวข้อ (mono uppercase tracking กว้าง)
+หัวข้อแต่ละสเต็ป: เลขลำดับในสี่เหลี่ยม `rounded-[5px]` + ชื่อหัวข้อ
 
-**01 จำนวนโปรเซส** — ช่องเลข mono กลางช่อง + ปุ่ม chip ลัด 3 / 5 / 10 (ชิปที่กำลังใช้อยู่เรือง amber) เปลี่ยนค่า/สร้างแถว P1…Pn ทันที (คงค่า BT เดิมตาม index) มี aria-label "จำนวนโปรเซส (1–10)"
+**① จำนวนโปรเซส** — Input เลข mono กลางช่อง + ปุ่ม shadcn ลัด 3 / 5 / 10 (ตัวที่เลือกอยู่ = variant secondary) เปลี่ยนค่า/สร้างแถว P1…Pn ทันที คงค่า BT เดิมตาม index; **โหมดสุ่ม: แถวใหม่สุ่มค่าให้อัตโนมัติ** (ช่อง readonly จะว่างแก้ไม่ได้)
 
-**02 Burst Time** — segmented control 2 ปุ่ม (สุ่มอัตโนมัติ / กรอกเอง) + ปุ่ม ⟳ สุ่มใหม่เมื่ออยู่โหมดสุ่ม
-- โหมดสุ่ม: ช่อง input readonly แสดงค่าที่ใช้คำนวณจริง (ตัวเลข mono ชิดขวา สีจางลง)
-- ตาราง BT: แถวสลับโทน `odd:bg-white/[0.015]`, จุดสถานะหน้าชื่อโปรเซส (เทา = ปกติ ชมพูแดง = ผิด) แถวผิดมี inline error สี rose
+**② Burst Time** — shadcn **Tabs** 2 แท็บ (สุ่มอัตโนมัติ / กรอกเอง) + ปุ่ม "สุ่มใหม่" (ghost + ไอคอน Dices + Tooltip) วาง**นอก** TabsList เป็น sibling — ไม่หลอกว่าเป็นแท็บที่สาม
+- โหมดสุ่ม: ช่อง readonly แสดงค่าที่ใช้คำนวณจริง
+- ตาราง BT ใช้ shadcn Table primitives เดียวกับตารางผลลัพธ์: จุดสถานะ `rounded-[2px]` (เทา = ปกติ แดง = ผิด) แถวผิดมี inline error
 
-**03 อัลกอริทึม** — การ์ดเลือก 3 ใบซ้อนกัน (checkbox ซ่อนแบบ sr-only, label ทั้งใบคลิกได้):
-- ชื่อย่อ mono (FCFS/SJF/RR) + ชื่อเต็ม + คำอธิบายไทย
-- เลือกแล้ว: พื้นสีอ่อนประจำอัลกอริทึม (10% opacity) + ring 1px + จุดสีสว่าง + ✓ สีประจำ
-- ยังไม่เลือก: ขอบ `white/10` จุดจาง 20% สัญลักษณ์ ○
-- เลือก RR → แสดง Time Quantum แบบ stepper (ปุ่ม − / + ปรับทีละ 1 ขั้นต่ำ 1) default 2
+**③ อัลกอริทึม** — การ์ดเลือก 3 ใบ (shadcn **Checkbox** + label ทั้งใบคลิกได้):
+- เลือกแล้ว: พื้นสีอ่อนประจำอัลกอริทึม (10%) + border สี + จุดสีสว่าง + ไอคอน **Check** (lucide) สีประจำ
+- ยังไม่เลือก: ขอบ `border-border` จุดจาง 25%
+- เลือก RR → กล่อง Time Quantum: stepper ปุ่ม − / + (ghost) ปรับทีละ 1 ขั้นต่ำ 1, default 2, focus ring ที่ wrapper
 
-**ปุ่ม** — "▸ คำนวณผลลัพธ์" เต็มความกว้างพื้น amber ตัวอักษรดำ mono uppercase (สัญญาณเดียวของ action หลัก), "ล้างค่า" แบบขอบบาง ghost
-- กด Enter ในฟอร์ม = คำนวณ (`type="submit"` → form onSubmit → handleCalculate)
+**ปุ่ม** — "คำนวณผลลัพธ์" shadcn Button เต็มความกว้าง, "ล้างค่า" ghost + ไอคอน RotateCcw
+- กด Enter = คำนวณ (`type="submit"` + `noValidate` เพื่อให้ custom validation E1–E7 ทำงานเสมอ)
 - ล้างค่า: reset ทุก state (n=3, โหมดสุ่ม, ทุกอัลกอริทึม, q=2)
 
 ## 8.4 พฤติกรรมผลลัพธ์
 
-- **ErrorSummary**: กล่องขอบ rose/30 พื้น rose-950/30 mono uppercase บอกจำนวนรายการ + bullet ทุกข้อ ผลลัพธ์เดิมถูกล้าง
-- **แผงเปรียบเทียบ AVG WT**: แสดงเมื่อเลือก ≥ 2 อัลกอริทึม — รางวัล (grooved rail) กว้าง ∝ AVG WT เทียบค่าแย่สุด แท่งของอัลกอริทึมที่ดีสุดเต็ม opacity ที่เหลือ 55% + badge "ต่ำสุด" ขอบ emerald
-- **การ์ดผลลัพธ์ต่ออัลกอริทึม**: header (จุดสี + ชื่อ mono + chip q เฉพาะ RR + หมายเลขช่อง CH 01/02/03) → ตาราง → stat block AVG WT (สี amber ตัวใหญ่) / AVG TAT (สีรอง) → Gantt; การ์ด fade-up ไล่ delay 70ms
-- ตารางเรียง P1…Pn เสมอ, ตัวเลข mono tabular ชิดขวา, คอลัมน์ WT สี amber หนาสุด (ค่าที่โจทย์บังคับรายงาน)
-- **Gantt**: แท่งสีตาม palette ของ processId กว้าง ∝ ระยะเวลา, label แสดงเมื่อแท่งกว้างพอ (≥9%), hover ขยายสูง + tooltip `P1: 0–5`, ตัวอักษรบนแท่งเป็นสีเข้ม (contrast กับแท่งสว่าง)
-- **สเกลเวลาใต้ Gantt** (ใหม่): เส้นตัดตำแหน่งเวลา + ตัวเลขกำกับ เลือกช่วงขีดที่หารสวย (1/2/4/5/10/20/25/50/100) ให้ได้ ≤10 ขีด — อ่านค่าได้แม่นขึ้นโดยไม่ต้อง hover
-- ทุกการ์ดใช้ชุดข้อมูลเดียวกัน เปรียบเทียบได้ในหน้าเดียว
+- **ErrorSummary**: กล่อง `role="alert"` ขอบ destructive/30 + ไอคอน AlertTriangle + bullet ทุกข้อ ผลลัพธ์เดิมถูกล้าง
+- **แผงเปรียบเทียบ AVG WT** (≥2 อัลกอริทึม): ราง `bg-muted` + แท่งสีประจำอัลกอริทึม กว้าง ∝ AVG WT เทียบค่าแย่สุด (สเกลเริ่ม 0 ตรงไปตรงมา) — แท่งที่ดีสุด opacity 1 ที่เหลือ 0.5 + Badge "ต่ำสุด" ขอบ emerald + `role="img"` พร้อม aria-label ค่าจริง
+- **การ์ดผลลัพธ์ต่ออัลกอริทึม** (fade-up ไล่ delay 70ms): CardHeader จุดสี + ชื่อเต็ม + Badge `q = k` (RR) → ตาราง (shadcn Table) → stat block AVG WT / AVG TAT (mono 2xl) → Gantt
+- ตารางเรียง P1…Pn เสมอ, ตัวเลข mono tabular ชิดขวา, คอลัมน์ WT หนาสุด
+- **Gantt chart ละเอียด**: legend แมปสี↔โปรเซส + makespan บนสุด, แท่งกว้าง ∝ ระยะเวลา (วางต่อเนื่อง margin -1px ไม่ใช้ gap เพื่อความแม่นของสเกล), เส้น grid แนวตั้ง `foreground/20` ทุกช่วง "หารสวย" (1/2/4/5/10×n...≤9 เส้น), แกนเวลา 0–total, label ในแท่งเมื่อกว้างพอ (≥8%), hover/focus ขยายแท่ง + **Tooltip** `P1 · ช่วง 0–5 · ยาว 5 หน่วย` (เข้าถึงด้วย keyboard ได้ tabIndex=0)

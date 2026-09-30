@@ -1,6 +1,6 @@
 "use client";
 
-import { Dices, Minus, Plus, RotateCcw } from "lucide-react";
+import { Check, Dices, Minus, Plus, RotateCcw } from "lucide-react";
 
 import ProcessTableInput from "./ProcessTableInput";
 import { ALGORITHM_META } from "./algorithm-styles";
@@ -8,9 +8,12 @@ import type { AlgorithmName } from "@/lib/scheduling/types";
 import type { RawFormInput } from "@/lib/validation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 export type BtMode = "random" | "manual";
@@ -116,7 +119,7 @@ export default function SchedulingForm(props: SchedulingFormProps) {
               <p className="mt-2 text-xs text-destructive">{props.processCountError}</p>
             ) : (
               <p className="mt-2 text-xs text-muted-foreground">
-                ระบบสร้างแถว P1–P{n_display(props.processCount)} ให้อัตโนมัติ
+                ระบบสร้างแถว P1–P{formatProcessCount(props.processCount)} ให้อัตโนมัติ
               </p>
             )}
           </section>
@@ -126,40 +129,32 @@ export default function SchedulingForm(props: SchedulingFormProps) {
           {/* 02 — Burst Time */}
           <section>
             <StepHeading no="2" title="Burst Time" />
-            <div className="mb-3 inline-flex rounded-lg bg-muted p-1">
-              {(
-                [
-                  ["random", "สุ่มอัตโนมัติ"],
-                  ["manual", "กรอกเอง"],
-                ] as const
-              ).map(([mode, label]) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => props.onBtModeChange(mode)}
-                  aria-pressed={props.btMode === mode}
-                  className={cn(
-                    "rounded-md px-3.5 py-1.5 text-sm transition-colors",
-                    props.btMode === mode
-                      ? "bg-background font-medium text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {label}
-                </button>
-              ))}
+            <div className="mb-3 flex items-center gap-2">
+              <Tabs
+                value={props.btMode}
+                onValueChange={(v) => props.onBtModeChange(v as BtMode)}
+              >
+                <TabsList>
+                  <TabsTrigger value="random">สุ่มอัตโนมัติ</TabsTrigger>
+                  <TabsTrigger value="manual">กรอกเอง</TabsTrigger>
+                </TabsList>
+              </Tabs>
               {props.btMode === "random" && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={props.onReshuffle}
-                  className="ml-1 gap-1.5"
-                  title="สุ่มค่า Burst Time ใหม่"
-                >
-                  <Dices className="size-3.5" aria-hidden />
-                  สุ่มใหม่
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={props.onReshuffle}
+                      className="gap-1.5"
+                    >
+                      <Dices className="size-3.5" aria-hidden />
+                      สุ่มใหม่
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>สุ่มค่า Burst Time ทุกโปรเซสใหม่</TooltipContent>
+                </Tooltip>
               )}
             </div>
             <ProcessTableInput
@@ -181,67 +176,57 @@ export default function SchedulingForm(props: SchedulingFormProps) {
                 const checked = algorithms[key];
                 const inputId = `algorithm-${key}`;
                 return (
-                  <div key={key}>
-                    <input
+                  <label
+                    key={key}
+                    htmlFor={inputId}
+                    className={cn(
+                      "flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors",
+                      "has-focus-visible:ring-2 has-focus-visible:ring-ring/50 has-focus-visible:outline-none",
+                      checked
+                        ? `${meta.softBg} ${meta.border}`
+                        : "border-border hover:bg-secondary/50"
+                    )}
+                  >
+                    <Checkbox
                       id={inputId}
-                      type="checkbox"
-                      className="peer sr-only"
                       checked={checked}
-                      onChange={(e) => props.onAlgorithmToggle(key, e.target.checked)}
+                      onCheckedChange={(v) => props.onAlgorithmToggle(key, v === true)}
+                      className="data-[state=checked]:border-transparent"
+                      // ให้สีเรืองตามอัลกอริทึมเมื่อเลือก (tailwind ไม่รู้จัก class แบบ dynamic)
+                      style={checked ? { backgroundColor: "currentColor" } : undefined}
                     />
-                    <label
-                      htmlFor={inputId}
+                    <span
                       className={cn(
-                        "flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors",
-                        "peer-focus-visible:ring-2 peer-focus-visible:ring-ring/50 peer-focus-visible:outline-none",
-                        checked
-                          ? `${meta.softBg} ${meta.border}`
-                          : "border-border hover:bg-secondary/50"
+                        "size-2.5 shrink-0 rounded-[3px] transition-opacity",
+                        meta.dot,
+                        checked ? "opacity-100" : "opacity-25"
                       )}
-                    >
-                      <span
-                        className={cn(
-                          "size-2.5 shrink-0 rounded-[3px] transition-opacity",
-                          meta.dot,
-                          checked ? "opacity-100" : "opacity-25"
-                        )}
-                      />
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-medium text-foreground">
-                          {meta.fullName}
-                          <span className="ml-1.5 font-mono text-xs text-muted-foreground">
-                            {meta.label}
-                          </span>
-                        </span>
-                        <span className="block truncate text-xs text-muted-foreground">
-                          {meta.tagline}
+                      aria-hidden
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-medium text-foreground">
+                        {meta.fullName}
+                        <span className="ml-1.5 font-mono text-xs text-muted-foreground">
+                          {meta.label}
                         </span>
                       </span>
-                      <span
-                        aria-hidden
-                        className={cn(
-                          "font-mono text-xs",
-                          checked ? meta.text : "text-muted-foreground/40"
-                        )}
-                      >
-                        {checked ? "✓" : "+"}
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {meta.tagline}
                       </span>
-                    </label>
-                  </div>
+                    </span>
+                    {checked && <Check className={cn("size-4", meta.text)} aria-hidden />}
+                  </label>
                 );
               })}
             </div>
 
             {algorithms.rr && (
               <div className="mt-3 rounded-lg border bg-muted/40 p-3">
-                <Label
-                  htmlFor="time-quantum"
-                  className="text-xs text-muted-foreground"
-                >
+                <Label htmlFor="time-quantum" className="text-xs text-muted-foreground">
                   Time Quantum
                 </Label>
                 <div className="mt-1.5 flex items-center gap-2">
-                  <div className="inline-flex items-center overflow-hidden rounded-lg border bg-background">
+                  <div className="inline-flex items-center overflow-hidden rounded-lg border bg-background focus-within:ring-1 focus-within:ring-ring">
                     <Button
                       type="button"
                       variant="ghost"
@@ -259,7 +244,7 @@ export default function SchedulingForm(props: SchedulingFormProps) {
                       value={props.timeQuantum}
                       onChange={(e) => props.onTimeQuantumChange(e.target.value)}
                       aria-invalid={Boolean(props.timeQuantumError)}
-                      className="w-14 rounded-none border-0 text-center font-mono tabular font-semibold focus-visible:ring-0"
+                      className="w-14 rounded-none border-0 text-center font-mono tabular font-semibold focus-visible:ring-0 focus-visible:border-0"
                     />
                     <Button
                       type="button"
@@ -306,7 +291,7 @@ export default function SchedulingForm(props: SchedulingFormProps) {
   );
 }
 
-/** แสดง n ปลอดภัยเมื่อยังไม่กรอก */
-function n_display(n: number | ""): string {
+/** แสดงจำนวนโปรเซสแบบปลอดภัยเมื่อยังไม่กรอก */
+function formatProcessCount(n: number | ""): string {
   return n === "" ? "n" : String(n);
 }

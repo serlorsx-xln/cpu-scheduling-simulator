@@ -1,4 +1,12 @@
 import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
 interface ProcessTableInputProps {
@@ -10,7 +18,7 @@ interface ProcessTableInputProps {
   errorFor: (processId: number) => string | undefined
 }
 
-/** ตารางกรอก Burst Time รายโปรเซส P1…Pn */
+/** ตารางกรอก Burst Time รายโปรเซส P1…Pn — ใช้ shadcn Table primitives เดียวกับตารางผลลัพธ์ */
 export default function ProcessTableInput({
   burstTimes,
   readOnly,
@@ -19,22 +27,19 @@ export default function ProcessTableInput({
 }: ProcessTableInputProps) {
   return (
     <div className="overflow-hidden rounded-lg border">
-      <table className="w-full table-auto text-sm">
-        <thead>
-          <tr className="border-b bg-muted/50 text-[11px] tracking-wide text-muted-foreground uppercase">
-            <th className="px-3 py-2 text-left font-medium">Process</th>
-            <th className="px-3 py-2 text-right font-medium">Burst Time</th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table className="text-sm">
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
+            <TableHead className="h-9 bg-muted/50">Process</TableHead>
+            <TableHead className="h-9 bg-muted/50 text-right">Burst Time</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {burstTimes.map((bt, index) => {
             const error = errorFor(index + 1);
             return (
-              <tr
-                key={index}
-                className="border-b transition-colors last:border-0 hover:bg-muted/30"
-              >
-                <td className="px-3 py-1.5">
+              <TableRow key={index} className="hover:bg-muted/30">
+                <TableCell className="py-1.5">
                   <span className="inline-flex items-center gap-2 font-mono text-sm font-medium text-foreground">
                     <span
                       className={cn(
@@ -44,8 +49,8 @@ export default function ProcessTableInput({
                     />
                     P{index + 1}
                   </span>
-                </td>
-                <td className="px-3 py-1.5">
+                </TableCell>
+                <TableCell className="py-1.5">
                   <Input
                     type="number"
                     min={1}
@@ -55,18 +60,21 @@ export default function ProcessTableInput({
                     readOnly={readOnly}
                     onChange={(e) => onChange(index, e.target.value)}
                     className={cn(
-                      "h-8 w-20 border-0 px-2.5 py-1 text-right font-mono tabular shadow-none focus-visible:ring-1",
-                      readOnly && "bg-transparent text-muted-foreground",
-                      error && "border-destructive bg-destructive/10 text-destructive"
+                      "h-8 w-20 px-2.5 text-right font-mono tabular",
+                      // ชดเชยขอบของ wrapper: ให้ตัว input เองเป็นตัวกำหนดสถานะ
+                      "border-transparent bg-transparent shadow-none focus-visible:ring-1",
+                      readOnly && "text-muted-foreground",
+                      error &&
+                        "border-destructive bg-destructive/10 text-destructive focus-visible:ring-destructive/40"
                     )}
                   />
                   {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             );
           })}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }

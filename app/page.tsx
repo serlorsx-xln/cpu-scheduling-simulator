@@ -54,7 +54,17 @@ export default function Home() {
 
   function handleProcessCountChange(value: number | "") {
     setProcessCount(value);
-    if (value !== "") setBurstTimes((current) => resizeBts(current, value));
+    if (value === "") return;
+    setBurstTimes((current) => {
+      const next = resizeBts(current, value);
+      // โหมดสุ่ม: แถวใหม่ที่ว่างต้องสุ่มค่าให้ ไม่งั้นช่อง readonly ว่างแก้ไม่ได้
+      if (btMode === "random") {
+        return next.map((v) =>
+          v.trim() === "" ? String(1 + Math.floor(Math.random() * 10)) : v
+        );
+      }
+      return next;
+    });
   }
 
   function handleBtModeChange(mode: BtMode) {
@@ -140,7 +150,7 @@ export default function Home() {
 
         <div className="grid items-start gap-6 lg:grid-cols-[400px_minmax(0,1fr)]">
           {/* ── คอลัมน์ตั้งค่า (ซ้าย) ─────────────────────────────── */}
-          <div className="lg:sticky lg:top-8">
+          <div className="lg:sticky lg:top-8 lg:max-h-[calc(100svh-4rem)] lg:overflow-y-auto lg:pr-1">
             <SchedulingForm
               processCount={processCount}
               onProcessCountChange={handleProcessCountChange}

@@ -15,8 +15,13 @@ const GHOST_PROCESSES = [
 
 export default function ResultsPlaceholder() {
   return (
-    <div className="space-y-6" aria-hidden>
+    <div className="space-y-6">
+      <p className="sr-only">
+        ยังไม่มีผลลัพธ์ — ตั้งค่าในแผงด้านซ้ายแล้วกดคำนวณผลลัพธ์ จะแสดงตาราง
+        ST CT TAT WT และ Gantt Chart ของแต่ละอัลกอริทึม
+      </p>
       {/* แผงเปรียบเทียบ (ghost) */}
+      <div aria-hidden>
       <Card size="sm" className="opacity-45">
         <CardHeader>
           <CardTitle>เปรียบเทียบ AVG Waiting Time</CardTitle>
@@ -45,8 +50,10 @@ export default function ResultsPlaceholder() {
           ))}
         </CardContent>
       </Card>
+      </div>
 
       {/* การ์ดผลลัพธ์ตัวอย่าง (ghost) */}
+      <div aria-hidden>
       <Card className="opacity-45">
         <CardHeader>
           <CardTitle className="flex items-center gap-2.5">
@@ -129,9 +136,10 @@ export default function ResultsPlaceholder() {
           </div>
         </CardContent>
       </Card>
+      </div>
 
       {/* คำอธิบายจริง (ไม่ ghost) ให้ screen reader และผู้ใช้อ่าน */}
-      <p className="-mt-3 text-center text-sm text-muted-foreground">
+      <p className="text-center text-sm text-muted-foreground">
         ภาพตัวอย่างโครงสร้างผลลัพธ์ — ตั้งค่าทางซ้ายแล้วกด&ldquo;คำนวณผลลัพธ์&rdquo; เพื่อแสดงค่าจริง
       </p>
     </div>
