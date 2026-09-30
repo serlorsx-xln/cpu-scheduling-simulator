@@ -31,7 +31,7 @@ curl http://localhost:3000/api/health   # {"status":"ok"}
 | Port (exposes) | `3000` |
 | Health check | path `/api/health`, port `3000` |
 | Domain (FQDN) | `https://cpuscheduling-simulator.synverge.dev` |
-| Environment variables | ไม่ต้องมี (แอปทำงานฝั่ง client ทั้งหมด) |
+| Environment variables | ไม่ต้องมี (แอปทำงานฝั่ง client ทั้งหมด) — **ห้ามตั้ง `NODE_ENV` เป็น "Available at Buildtime"**: `npm ci` จะข้าม devDependencies แล้ว `vitest: not found` (Dockerfile กันไว้แล้วด้วย `npm ci --include=dev`) |
 
 **repo เป็น private** — ต้องให้ Coolify อ่านได้ทางใดทางหนึ่ง:
 1. **GitHub App ของ Coolify** (แนะนำ) — Sources → GitHub App → ให้สิทธิ์ repo นี้; push แล้ว deploy อัตโนมัติได้

@@ -12,6 +12,7 @@ spec:
       build:
         dockerfile: Dockerfile
       # โดเมนจริงผูกหลังสร้างด้วย bind_application_domain (cpuscheduling-simulator.synverge.dev)
+      # NODE_ENV=production ตั้งใน Dockerfile (stage runner) — อย่าใส่ที่นี่:
+      # Coolify ตั้ง env จาก manifest เป็น "Available at Buildtime" ทำให้ npm ci ข้าม devDependencies
       env:
-        NODE_ENV: production
         NEXT_TELEMETRY_DISABLED: "1"

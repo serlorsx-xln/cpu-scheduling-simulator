@@ -10,7 +10,9 @@ FROM node:${NODE_VERSION} AS deps
 WORKDIR /app
 RUN apk add --no-cache libc6-compat
 COPY package.json package-lock.json ./
-RUN npm ci --no-audit --no-fund
+# --include=dev: ต้องมี devDependencies (vitest, typescript, tailwind) ตอน test/build เสมอ
+# แม้แพลตฟอร์ม deploy ส่ง NODE_ENV=production เข้ามาตอน build (npm จะข้าม dev deps ถ้าไม่ระบุ)
+RUN npm ci --include=dev --no-audit --no-fund
 
 # ── 2) test + build ────────────────────────────────────────────────────
 FROM node:${NODE_VERSION} AS builder
