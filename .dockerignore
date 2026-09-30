@@ -1,0 +1,16 @@
+# ไม่ส่งเข้า build context — ให้ image build จาก source ล้วน
+node_modules
+.next
+out
+.git
+.gitignore
+.impeccable
+*.log
+npm-debug.log*
+.DS_Store
+.env*
+!.env.example
+coverage
+Dockerfile
+.dockerignore
+docs

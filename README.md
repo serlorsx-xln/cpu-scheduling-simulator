@@ -16,6 +16,15 @@ npm run dev
 
 จากนั้นเปิดเบราว์เซอร์ที่ **http://localhost:3000**
 
+### รันด้วย Docker (แบบ production)
+
+```bash
+docker build -t cpu-scheduling-simulator .
+docker run --rm -p 3000:3000 cpu-scheduling-simulator
+```
+
+ขั้นตอน deploy ขึ้น Coolify อยู่ที่ [docs/DEPLOY.md](docs/DEPLOY.md)
+
 ## วิธีใช้งานโปรแกรม
 
 1. กรอก **จำนวนโปรเซส** (1–10) หรือกดปุ่มลัด 3 / 5 / 10 — ระบบสร้าง P1…Pn ให้อัตโนมัติ (ทุกโปรเซสมี Arrival Time = 0)
