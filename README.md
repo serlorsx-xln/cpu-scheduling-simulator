@@ -1,7 +1,7 @@
 # CPU Scheduling Simulator
 
 โปรแกรมจำลองและเปรียบเทียบอัลกอริทึม CPU Scheduling: **FCFS**, **SJF (Non-preemptive)** และ **Round Robin**
-พัฒนาด้วย Next.js (App Router) + TypeScript + Tailwind CSS
+พัฒนาด้วย Next.js (App Router) + TypeScript + Tailwind CSS v4 + **shadcn/ui** + **LINE Seed Sans TH** (self-host) ในธีม dark แบบ premium
 
 > เอกสารโปรเจกต์ทั้งหมด (แผน, สถาปัตยกรรม, สเปกอัลกอริทึม, การคำนวณมือ, แผนทดสอบ) อยู่ที่ [docs/README.md](docs/README.md)
 
@@ -35,8 +35,9 @@ npm run test
 ## โครงสร้างโปรเจกต์
 
 ```
-app/            หน้าเว็บหลัก (App Router)
-components/     UI components (ฟอร์ม, ตารางผลลัพธ์, Gantt chart, error)
+app/            หน้าเว็บหลัก (App Router) + ฟอนต์ LINE Seed Sans TH (self-host woff2)
+components/     UI components (ฟอร์ม, ตารางผลลัพธ์, Gantt chart, error, ghost preview)
+components/ui/  shadcn/ui primitives (Card, Button, Table, Tabs, Tooltip, ...)
 lib/scheduling/ ตรรกะอัลกอริทึม FCFS/SJF/RR (pure functions)
 lib/validation.ts  การตรวจสอบข้อมูลฟอร์ม
 tests/          unit tests (Vitest)
