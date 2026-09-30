@@ -1,7 +1,7 @@
 # Deploy — Coolify
 
 > เป้าหมาย: **https://cpuscheduling-simulator.synverge.dev**
-> สถานะ ณ 2026-09-30: เตรียม image และตรวจแล้ว · รอเชื่อม Coolify (token ของ MCP ใช้ไม่ได้) และสิทธิ์อ่าน repo private
+> สถานะ ณ 2026-09-30: **ออนไลน์แล้ว** — Coolify project `cpu-scheduling-simulator`, app `web` (`wmvsf8jpj1gelikvtzlkepg5`), source `https://github.com/serlorsx-xln/cpu-scheduling-simulator` (public) branch `main`
 
 ## 1. สิ่งที่เตรียมไว้แล้ว
 
@@ -66,6 +66,16 @@ curl http://localhost:3000/api/health   # {"status":"ok"}
    ```
    และเปิดหน้าเว็บกด SET-A → AVG WT ต้องได้ 4.33 / 3.67 / 7.00
 
-## 5. Rollback
+## 5. สิ่งที่เจอจริงตอน deploy ครั้งแรก
+
+1. **`vitest: not found`** — `NODE_ENV=production` จาก `coolify.yaml` ถูกนำเข้าเป็น "Available at Buildtime" → `npm ci` ข้าม devDependencies · แก้: `npm ci --include=dev` ใน Dockerfile, เอา `NODE_ENV` ออกจาก manifest, ตั้ง env ใน Coolify เป็น runtime อย่างเดียว
+2. **Turbopack + `next/font/google` ล้มบน linux/amd64** (บน Mac arm64 ผ่าน) · แก้: self-host Geist Mono ด้วย `next/font/local`
+3. **Redirect วน (302 ไม่จบ) หลังผูกโดเมนแบบ `https://`** — โซน `synverge.dev` ใช้ Cloudflare SSL แบบ Flexible (Cloudflare ต่อ origin ด้วย HTTP) แต่ Traefik redirect HTTP→HTTPS · แก้: ตั้ง FQDN เป็น `http://cpuscheduling-simulator.synverge.dev` แบบเดียวกับแอปอื่นในโซน (เช่น promptpost) — ผู้ใช้ยังได้ HTTPS จาก Cloudflare
+   - ถ้าวันหนึ่งเปลี่ยนโซนเป็น Full (strict) ต้องเปลี่ยน FQDN ของทุกแอปในโซนเป็น `https://` พร้อมกัน
+   - ตอนนี้ `http://` ของโดเมนตอบ 200 ตรง ๆ ไม่ redirect ไป HTTPS — เปิด "Always Use HTTPS" ใน Cloudflare ได้ถ้าต้องการบังคับ
+
+ตรวจหลังขึ้นจริง: `/api/health` ok ผ่าน HTTPS, security headers ครบ, ฟอนต์ 5 ไฟล์เสิร์ฟจากแอป, ใบรับรอง Google Trust Services (Cloudflare), E2E บนโดเมนจริงทั้ง 1440 และ 390 px: SET-A → AVG WT 4.33 / 3.67 / 7.00, คิว RR ที่เวลา 6–7 = CPU P1 · คิว P2 → P3, ไม่มี error
+
+## 6. Rollback
 
 Coolify → แอป → Deployments → redeploy commit ก่อนหน้า (image แต่ละรอบ build จาก commit นั้น)
