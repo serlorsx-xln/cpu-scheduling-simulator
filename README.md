@@ -1,17 +1,13 @@
 # CPU Scheduling Simulator
 
-A web application that simulates and compares CPU scheduling algorithms — FCFS, SJF (non-preemptive), and Round Robin — on the same process set, side by side.
-
-## Why it exists
-
-It was built as a teaching/study tool for operating-systems coursework: instead of comparing scheduling algorithms on a whiteboard, you enter a process set once and get Gantt charts, per-process metrics (ST/CT/TAT/WT), average waiting times, a step-by-step "how it was computed" trace, and an animated playback of the ready queue — for every algorithm at the same time. All scheduling logic lives in pure TypeScript functions (`lib/scheduling/`) that are unit-tested against hand-calculated reference values, so the numbers shown match a by-hand calculation.
+A web application that simulates and compares CPU scheduling algorithms — **FCFS**, **SJF (non-preemptive)**, and **Round Robin** — on the same process set, side by side. Built as the CSxxx Operating Systems term project.
 
 ```
 Process set (P1..Pn, AT = 0, BT 1..10, n ≤ 10)
         │
         ▼
-┌─────────────────┐   FCFS  ──► Gantt + ST/CT/TAT/WT table + AVG WT/TAT
-│ runSimulation() │   SJF   ──►  "   "     "   "     "   "     "
+┌─────────────────┐   FCFS  ──► Gantt + ST/CT/TAT/WT table + AVG WT
+│ runSimulation() │   SJF   ──►  "   "     "   "     "   "
 │ (lib/scheduling)│   RR(q) ──►  "   "     "   "     "   "  + quantum sweep
 └─────────────────┘
         │
@@ -19,49 +15,110 @@ Process set (P1..Pn, AT = 0, BT 1..10, n ≤ 10)
   Comparison panel: AVG waiting time across all selected algorithms
 ```
 
-## Features
+## How to run
 
-- **Three algorithms on one input**: FCFS, non-preemptive SJF, and Round Robin with a configurable time quantum (default 2); select any combination, results always render in FCFS / SJF / RR order.
-- **Per-algorithm result cards**: Gantt chart with time labels on every edge, a per-process row showing CPU vs. waiting intervals, and a table of Process / BT / ST / CT / TAT / WT plus the AVG WT formula.
-- **Comparison summary** of average waiting time (and per-process WT) across all selected algorithms.
-- **Step-by-step trace** ("hand-calculation mode") per algorithm: the queue before each decision, why a process was picked, remaining burst, and the result.
-- **Animated playback**: step time forward (or auto-play at adjustable speed) across all algorithms simultaneously, showing who holds the CPU, the ready-queue order, and processes pushed to the back of the RR queue.
-- **Quantum sweep chart**: AVG WT of Round Robin for every quantum value; click a point to recompute with that quantum.
-- **Hover/keyboard sync**: hovering or arrow-keying the Gantt shows who runs and who waits at each time unit across all algorithms at once; hovering/clicking a process highlights it everywhere.
-- **Input helpers**: 1–10 processes (quick buttons for 3/5/10), random or manual burst times, a SET-A button that loads the hand-calculated reference set (P1=5, P2=3, P3=8, q=2), presentation mode for projectors, and print-to-PDF for reports.
-- **Form validation** with explicit error rules (E1–E7): process count, per-row burst times, time quantum, and algorithm selection.
-- All simulation runs client-side; there is no backend beyond a health endpoint.
-
-## Requirements
-
-- Node.js (the Docker image uses Node 24; any recent LTS should work)
-- npm
-
-## Usage
+**Requirements:** Node.js 20+ (the Docker image uses Node 24) and npm. No database, no environment variables — everything runs in the browser.
 
 ```bash
 npm install
-npm run dev        # development server on http://localhost:3000
+npm run dev        # open http://localhost:3000
 ```
 
-Other scripts:
+Or open the deployed version: **http://cpuscheduling-simulator.synverge.dev**
 
 | Command | What it does |
 |---|---|
+| `npm run dev` | Development server at http://localhost:3000 |
 | `npm run build` | Production build (standalone output) |
 | `npm start` | Serve the production build |
 | `npm run test` | Run the 60 Vitest unit tests |
 | `npm run lint` | ESLint |
 
-### Tests
+**Tools & versions:** Next.js 16.3.7 (App Router) · React 19.2.8 · TypeScript 5 · Tailwind CSS 4 · shadcn/ui (Radix) · Vitest 5. The app ships as a multi-stage Docker image (`node:24-alpine`); deployment details are in [docs/DEPLOY.md](docs/DEPLOY.md).
 
-`npm run test` covers the algorithm implementations (`lib/scheduling/`), form validation (`lib/validation.ts`), and the timeline/trace helpers. Tests check structural invariants (TAT = CT since AT = 0, WT = TAT − BT, Gantt contiguity, Σ Gantt span = Σ BT), compare against the hand-calculated SET-A reference, and cross-check the step trace against the real Gantt output over 300 randomized cases. The Docker build runs the tests too — a failing test fails the build.
+## How to use
 
-### API
+1. **Number of processes** — pick 1–10 (quick buttons for 3 / 5 / 10). The app creates rows P1, P2, …, Pn. All processes arrive at the same time (AT = 0), per the assignment.
+2. **Burst times** — two modes:
+   - *Random* — the system generates positive integers (1–10). "สุ่มใหม่" regenerates.
+   - *Manual* — type each BT yourself.
+3. **Algorithms** — tick FCFS, SJF, RR (any combination). For RR the **Time Quantum** defaults to **2** and can be changed to any positive integer before running.
+4. **คำนวณ** — each selected algorithm renders its own result card: Gantt chart with time labels, a per-process row (CPU vs. waiting intervals), and the table **Process / AT / BT / ST / CT / TAT / WT** plus `AVG WT = ΣWT ÷ n`.
+   - Formulas: `TAT = CT − AT`, `WT = TAT − BT`. Since every AT = 0, TAT = CT.
+   - For RR, **ST is the first time the process gets the CPU** (a process may run several times; CT is when it finishes).
+5. **Compare** — the comparison summary ranks the selected algorithms by average waiting time on the same input. The **Quantum sweep** chart plots RR's AVG WT for every q; click a point to recompute with that q.
+6. **Watch it work** — the step-by-step trace (hand-calculation mode) shows the ready queue before each decision, why a process was picked, and the remaining burst; the playback bar animates the whole run.
 
-| Route | Method | Description |
+Invalid input is rejected with explicit messages (E1–E7): empty process count, zero/negative count, non-integer or non-positive BT, incomplete rows, invalid quantum.
+
+## Test data & test cases (assignment 1.6)
+
+**SET-A** — the standard hand-calculated reference set (press the "SET-A" button to load it):
+
+> BT: P1 = 5, P2 = 3, P3 = 8, AT = 0 for all, q = 2
+
+Full hand-calculation walkthrough: [docs/07-HAND-CALCULATION.md](docs/07-HAND-CALCULATION.md).
+
+| Case | Steps | Expected |
 |---|---|---|
-| `/api/health` | GET | Returns `{"status":"ok"}` with `Cache-Control: no-store`; used by the Docker `HEALTHCHECK` |
+| **T1** — manual BT, compare all three | SET-A, tick all 3 algorithms, run | Every cell matches §7.5 of the hand-calculation doc, including AVG WT and the Gantt shapes |
+| **T2** — random BT, all processes complete | n = 10, random, run all 3 | Table complete P1–P10, no blanks/NaN; last CT = ΣBT; AVG WT = ΣWT ÷ 10 |
+| **T3** — same data, change quantum | SET-A, RR only, q = 1 / 2 / 4 | AVG WT differs by q; final Gantt end = 16 in all cases; q ≥ 8 behaves like FCFS |
+| **T4** — validation | submit empty / zero / non-integer BT / non-integer q / missing rows | Explicit error message for each rule (E1–E7) |
+
+Screenshots of each case are recorded in [docs/11-MANUAL-TESTS.md](docs/11-MANUAL-TESTS.md).
+
+## Unit tests
+
+`npm run test` (Vitest) covers the algorithm implementations (`lib/scheduling/`), form validation (`lib/validation.ts`), and timeline/trace helpers: structural invariants (TAT = CT since AT = 0, WT = TAT − BT, Gantt contiguity, Σ Gantt span = Σ BT), the hand-calculated SET-A reference, and cross-checks of the step trace against the real Gantt output over 300 randomized cases. The Docker build runs the tests too — a failing test fails the build.
+
+## Team & responsibilities
+
+| Role | Scope | Member |
+|---|---|---|
+| **Algorithm & computation** | `lib/scheduling/` — FCFS / SJF / RR logic, ST/CT/TAT/WT/AVG-WT computation, unit tests | _(member 1 — name)_ |
+| **User interface** | `components/` — input form, process table, result tables, Gantt/playback, wiring UI to computation | _(member 2 — name)_ |
+| **Testing, README & video** | Test cases T1–T4, verification, this README, video planning/recording/editing (both videos) | _(member 3 — name)_ |
+
+_(fill in real names; multiple members may share a role — list what each person actually did here)_
+
+## Use of AI (transparency statement)
+
+The project used **Claude (Claude Code)** as an assistant. Everything AI produced was reviewed, tested, and hand-verified before being kept; the team can explain and modify every part of the code. Where AI was used:
+
+| Stage | How AI helped | Example prompt |
+|---|---|---|
+| Algorithm explanation | Explained RR context switches and why small q raises waiting time in this model | "อธิบายหลักการ Round Robin และเหตุผลที่ quantum เล็กทำให้ AVG WT สูงขึ้น พร้อมยกตัวอย่างตัวเลข" |
+| Program structure | Designed the split between pure scheduling functions and React UI, and the folder layout | "ช่วยออกแบบโครงสร้างโปรเจกต์ Next.js แยกส่วนคำนวณออกจาก UI และบอกเหตุผล" |
+| Code generation | Wrote the first version of `simulateRr`, the Gantt component, and the validation rules | "เขียนฟังก์ชัน simulateRr รับ burstTimes กับ quantum คืน startTime completionTime และ gantt ให้ ST เป็นเวลาที่ได้ CPU ครั้งแรก" |
+| Debugging | Fixed an RR ordering bug where a re-queued process jumped ahead of newly-arrived ones | "ผล RR ไม่ตรงกับคำนวณมือตอนโปรเซสถูกเติมกลับท้ายคิว ช่วยหาสาเหตุ" |
+| Test data & verification | Generated randomized cross-checks (300 cases) comparing the trace against the Gantt output | "เขียน test เทียบผล trace กับ gantt จากข้อมูลสุ่ม 300 ชุด เพื่อยืนยันว่าสอดคล้องกัน" |
+| Presentation planning | Outlined the two video scripts against the assignment checklist | "ช่วยทำโครงร่างสคริปต์วิดีโออธิบายโปรแกรมให้ครอบคลุมหัวข้อที่อาจารย์กำหนด" |
+
+**How AI output was verified:** every metric was checked against hand calculations (SET-A), invariants are enforced by unit tests, and manual browser test cases T1–T4 confirm what the tests claim. AI was never used to produce results without review.
+
+## Project structure
+
+```
+app/              Next.js App Router page, fonts, and /api/health route
+components/       UI: form, process table, Gantt/timeline, playback, traces, charts
+components/ui/    shadcn/ui primitives
+lib/scheduling/   Algorithm logic as pure functions (fcfs.ts, sjf.ts, rr.ts, trace, timeline)
+lib/validation.ts Form validation rules (E1–E7)
+tests/            Vitest unit tests (60)
+docs/             Project documentation (Thai): plan, requirements, algorithms, hand calculation, tests, deploy
+```
+
+Where each assignment requirement lives in the code:
+
+| Assignment item | Code |
+|---|---|
+| 1.1 process naming, AT = 0 | `lib/scheduling/types.ts`, `lib/scheduling/simulate.ts` (builds P1..Pn) |
+| 1.2 BT random / manual + validation | `components/ProcessTableInput.tsx`, `lib/validation.ts` |
+| 1.3 algorithm selection, quantum default 2 | `components/SchedulingForm.tsx`, `lib/scheduling/fcfs.ts`, `sjf.ts`, `rr.ts` |
+| 1.4 result table + AVG WT + comparison | `lib/scheduling/simulate.ts` (metrics), `components/ResultTable.tsx`, `ComparisonSummary.tsx` |
+| 1.5 input checking with messages | `lib/validation.ts` (rules E1–E7), `components/ErrorSummary.tsx` |
+| 1.6 tests | `tests/scheduling.test.ts`, `docs/07-HAND-CALCULATION.md`, `docs/11-MANUAL-TESTS.md` |
 
 ## Deploy
 
@@ -73,41 +130,14 @@ docker run --rm -p 3000:3000 cpu-scheduling-simulator
 curl http://localhost:3000/api/health   # {"status":"ok"}
 ```
 
-The Dockerfile (based on `node:24-alpine`):
-
-1. **deps** — `npm ci --include=dev` (dev dependencies are needed for tests/build even when `NODE_ENV=production` is injected at build time)
-2. **builder** — runs `npm run test` (deploy fails if tests fail), then `npm run build`
-3. **runner** — copies only the Next.js standalone server, static assets, and `public/`; runs as the non-root `nextjs` user on port 3000, with a `wget`-based health check against `/api/health`
-
-Runtime environment (set in the image, no configuration required):
-
-| Variable | Value | Notes |
-|---|---|---|
-| `PORT` | `3000` | Container port; map it with `-p` |
-| `HOSTNAME` | `0.0.0.0` | Required for the standalone server inside a container |
-| `NODE_ENV` | `production` | Set in the runner stage; do not set it as a build-time env or `npm ci` will skip dev dependencies |
-| `NEXT_TELEMETRY_DISABLED` | `1` | Disables Next.js telemetry |
-
-Detailed Coolify deployment notes are in [docs/DEPLOY.md](docs/DEPLOY.md) (in Thai).
+The Dockerfile (based on `node:24-alpine`): **deps** → `npm ci --include=dev`; **builder** → runs `npm run test` (a failing test fails the build), then `npm run build`; **runner** → copies the Next.js standalone server and static assets, runs as the non-root `nextjs` user on port 3000 with a `wget` health check against `/api/health`.
 
 ## Security notes
 
 - The app handles no money, authentication, or secrets, and stores nothing — all input stays in the browser.
-- The standalone server runs as a non-root user in the container, and `next.config.ts` sets `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: SAMEORIGIN`, a restrictive `Permissions-Policy`, and disables the `X-Powered-By` header.
-- Fonts (LINE Seed Sans TH, Geist Mono) are self-hosted woff2 files, so the app makes no external font requests.
-
-## Project structure
-
-```
-app/              Next.js App Router page, fonts, and /api/health route
-components/       UI: form, process table, Gantt/timeline, playback, traces, charts
-components/ui/    shadcn/ui primitives
-lib/scheduling/   Algorithm logic as pure functions (fcfs, sjf, rr, trace, timeline)
-lib/validation.ts Form validation rules (E1–E7)
-tests/            Vitest unit tests
-docs/             Project documentation (Thai): plan, requirements, algorithms, tests, deploy
-```
+- The standalone server runs as a non-root user in the container; `next.config.ts` sets standard hardening headers and disables `X-Powered-By`.
+- Fonts are self-hosted woff2 files, so the app makes no external requests.
 
 ## License
 
-No license file is present in this repository; the package is marked `private`. All rights reserved by the repository owner unless stated otherwise.
+The package is marked `private`. All rights reserved by the repository owner unless stated otherwise.
