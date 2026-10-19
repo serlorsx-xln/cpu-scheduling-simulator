@@ -1,7 +1,7 @@
 # Deploy — Coolify
 
-> เป้าหมาย: **https://cpuscheduling-simulator.synverge.dev**
-> สถานะ ณ 2026-09-30: **ออนไลน์แล้ว** — Coolify project `cpu-scheduling-simulator`, app `web` (`wmvsf8jpj1gelikvtzlkepg5`), source `https://github.com/serlorsx-xln/cpu-scheduling-simulator` (public) branch `main`
+> เป้าหมาย: **https://cpu-scheduling.s3rx.net** (ย้ายจาก `cpuscheduling-simulator.synverge.dev` เมื่อ 2026-10-19 — โซน `s3rx.net` ใช้ Cloudflare SSL แบบ **Full** จึงต้องตั้ง FQDN เป็น `https://` ให้ Traefik ออกใบรับรองเอง; ต่างจากโซน `synverge.dev` ที่ใช้ Flexible แล้วผูกด้วย `http://`)
+> สถานะ ณ 2026-10-19: **ออนไลน์แล้ว** — Coolify project `cpu-scheduling-simulator`, app `web` (`wmvsf8jpj1gelikvtzlkepg5`), source `https://github.com/serlorsx-xln/cpu-scheduling-simulator` (public) branch `main`
 
 ## 1. สิ่งที่เตรียมไว้แล้ว
 
@@ -30,7 +30,7 @@ curl http://localhost:3000/api/health   # {"status":"ok"}
 | Build pack | **Dockerfile** (ไฟล์ที่ root) |
 | Port (exposes) | `3000` |
 | Health check | path `/api/health`, port `3000` |
-| Domain (FQDN) | `https://cpuscheduling-simulator.synverge.dev` |
+| Domain (FQDN) | `https://cpu-scheduling.s3rx.net` |
 | Environment variables | ไม่ต้องมี (แอปทำงานฝั่ง client ทั้งหมด) — **ห้ามตั้ง `NODE_ENV` เป็น "Available at Buildtime"**: `npm ci` จะข้าม devDependencies แล้ว `vitest: not found` (Dockerfile กันไว้แล้วด้วย `npm ci --include=dev`) |
 
 **repo เป็น private** — ต้องให้ Coolify อ่านได้ทางใดทางหนึ่ง:
@@ -57,12 +57,12 @@ curl http://localhost:3000/api/health   # {"status":"ok"}
 1. push `main` ขึ้น GitHub (มีทุก commit แล้ว)
 2. `get_platform_guide` → `get_infrastructure_overview` → เลือก server
 3. สร้างแอป (UI เมื่อ repo private หรือ `create_project_from_git` เมื่อ public) ตามตารางข้อ 2
-4. `bind_application_domain` host `cpuscheduling-simulator.synverge.dev` (เลือก `create_dns` ตามทาง ก/ข)
+4. `bind_application_domain` host `cpu-scheduling.s3rx.net` (เลือก `create_dns` ตามทาง ก/ข)
 5. `trigger_deploy` → `get_logs` ดูจนเห็น test ผ่าน / `✓ Ready`
 6. ตรวจหลัง deploy:
    ```bash
-   curl -sI https://cpuscheduling-simulator.synverge.dev/ | head -1          # HTTP/2 200
-   curl -s  https://cpuscheduling-simulator.synverge.dev/api/health         # {"status":"ok"}
+   curl -sI https://cpu-scheduling.s3rx.net/ | head -1          # HTTP/2 200
+   curl -s  https://cpu-scheduling.s3rx.net/api/health         # {"status":"ok"}
    ```
    และเปิดหน้าเว็บกด SET-A → AVG WT ต้องได้ 4.33 / 3.67 / 7.00
 
@@ -73,6 +73,9 @@ curl http://localhost:3000/api/health   # {"status":"ok"}
 3. **Redirect วน (302 ไม่จบ) หลังผูกโดเมนแบบ `https://`** — โซน `synverge.dev` ใช้ Cloudflare SSL แบบ Flexible (Cloudflare ต่อ origin ด้วย HTTP) แต่ Traefik redirect HTTP→HTTPS · แก้: ตั้ง FQDN เป็น `http://cpuscheduling-simulator.synverge.dev` แบบเดียวกับแอปอื่นในโซน (เช่น promptpost) — ผู้ใช้ยังได้ HTTPS จาก Cloudflare
    - ถ้าวันหนึ่งเปลี่ยนโซนเป็น Full (strict) ต้องเปลี่ยน FQDN ของทุกแอปในโซนเป็น `https://` พร้อมกัน
    - ตอนนี้ `http://` ของโดเมนตอบ 200 ตรง ๆ ไม่ redirect ไป HTTPS — เปิด "Always Use HTTPS" ใน Cloudflare ได้ถ้าต้องการบังคับ
+4. **ย้ายโดเมนมา `cpu-scheduling.s3rx.net` (2026-10-19)** — HTTPS ผ่าน Cloudflare ติด **error 526** เพราะโซน `s3rx.net` ใช้ SSL แบบ Full (ต่างจาก `synverge.dev` ที่ Flexible) · แก้: PATCH `domains` ของแอปผ่าน Coolify API เป็น `https://cpu-scheduling.s3rx.net` แล้ว deploy ใหม่ เพื่อให้ Traefik ออกใบรับรอง Let's Encrypt ของโดเมนนี้เอง
+   - หมายเหตุ: PATCH ต้องใช้ฟิลด์ `domains` ไม่ใช่ `fqdn` (API จะ 422 "This field is not allowed")
+   - ระหว่างแก้ต้องเปิด repo `serlorsx-xln/cpu-scheduling-simulator` เป็น public อีกครั้ง — Coolify clone ผ่าน HTTPS ไม่ได้ถ้า private (จะ fail ที่ `git ls-remote` exit 128)
 
 ตรวจหลังขึ้นจริง: `/api/health` ok ผ่าน HTTPS, security headers ครบ, ฟอนต์ 5 ไฟล์เสิร์ฟจากแอป, ใบรับรอง Google Trust Services (Cloudflare), E2E บนโดเมนจริงทั้ง 1440 และ 390 px: SET-A → AVG WT 4.33 / 3.67 / 7.00, คิว RR ที่เวลา 6–7 = CPU P1 · คิว P2 → P3, ไม่มี error
 

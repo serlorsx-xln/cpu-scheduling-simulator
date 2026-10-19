@@ -24,7 +24,7 @@ npm install
 npm run dev        # open http://localhost:3000
 ```
 
-Or open the deployed version: **http://cpuscheduling-simulator.synverge.dev**
+Or open the deployed version: **https://cpu-scheduling.s3rx.net**
 
 | Command | What it does |
 |---|---|
