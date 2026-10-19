@@ -18,6 +18,7 @@ Term Project: จำลองและเปรียบเทียบอัล
 | 9 | [09-UI-VALIDATION-UX.md](09-UI-VALIDATION-UX.md) | ข้อความแจ้งเตือนมาตรฐาน แนวทาง styling และ accessibility |
 | 10 | [10-UNIT-TESTS.md](10-UNIT-TESTS.md) | เคส unit test (Vitest) ทั้งหมด |
 | 11 | [11-MANUAL-TESTS.md](11-MANUAL-TESTS.md) | การทดสอบบนเบราว์เซอร์ T1–T4 ตามโจทย์ข้อ 1.6 และเกณฑ์ผ่าน |
+| 12 | [12-CODE-EXPLAINER.md](12-CODE-EXPLAINER.md) | คู่มืออธิบายโค้ดสำหรับคนอัดวิดีโอ — 6 หัวข้อที่โจทย์กำหนด พร้อมไฟล์:บรรทัด และบทพูด |
 
 ## อ่านแบบย่อตามบทบาท
 
