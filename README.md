@@ -74,13 +74,14 @@ Screenshots of each case are recorded in [docs/11-MANUAL-TESTS.md](docs/11-MANUA
 
 ## Team & responsibilities
 
-| Role | Scope | Member |
-|---|---|---|
-| **Algorithm & computation** | `lib/scheduling/` — FCFS / SJF / RR logic, ST/CT/TAT/WT/AVG-WT computation, unit tests | _(member 1 — name)_ |
-| **User interface** | `components/` — input form, process table, result tables, Gantt/playback, wiring UI to computation | _(member 2 — name)_ |
-| **Testing, README & video** | Test cases T1–T4, verification, this README, video planning/recording/editing (both videos) | _(member 3 — name)_ |
+| Member | Student ID | Role | Scope |
+|---|---|---|---|
+| **กนกวรรณ นพฤทธิ์** | 1670707197 | Video — program explanation (ส่วนที่ 2) | อัดคลิปและอธิบายการทำงานและโค้ดของโปรแกรม (วิดีโอส่วนแรก) |
+| **ดาววิจิตร โพธิจักร** | 1670707007 | Video — program explanation (ส่วนที่ 2) | อัดคลิปส่วนแรก ร่วมกับ กนกวรรณ (วิดีโอส่วนที่ 2) |
+| **อัคคณภ จันทร์เภา** | 1670703642 | Algorithm & computation (ส่วนที่ 1) | `lib/scheduling/` — อัลกอริทึม FCFS / SJF / RR และการคำนวณ ST, CT, TAT, WT, AVG WT ตามโจทย์ |
+| **ชานน จิระกาญจนากิจ** | 1670703220 | UI + verification + AI video (ส่วนที่ 1 และ 3) | ตรวจสอบและปรับปรุง UI (`components/`), วางแผนการอัดคลิป, จัดทำวิดีโอเบื้องหลังการใช้ AI (ส่วนที่ 3) |
 
-_(fill in real names; multiple members may share a role — list what each person actually did here)_
+Every member understands the code and scheduling principles, and each appears in or contributes to the explanation videos.
 
 ## Use of AI (transparency statement)
 
